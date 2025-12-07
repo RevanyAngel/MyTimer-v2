@@ -14,7 +14,7 @@ body {
     align-items: center;
     background-color: #C8D9EB;
     width: 70vw;
-    max-width: 500px;
+    max-width: 800px;
     height: fit-content;
     padding: 1rem;
     border: 2px solid #ddd;
@@ -32,7 +32,8 @@ h1 {
 h2 {
     font-family: "Lexend Deca", sans-serif;
     margin: 0 1rem 1rem 1rem;
-    font-size: 8rem;
+    text-align: center;
+    font-size: 6rem;
     font-weight: 200;
 }
 
@@ -49,12 +50,12 @@ button {
     padding: .3rem;
     border-radius: 15px;
     border: 2px solid #ddd;
-    background-color: #F0D9DA;
+    background-color: #FFF1CB;
     box-shadow: 0 5px 5px rgba(0,0,0,0.2);
     transition: all 0.3s ease;
 }
 
 button:hover {
-    background-color: #e6d0d1;
+    background-color: #ece0bc;
     scale: 1.1;
 }

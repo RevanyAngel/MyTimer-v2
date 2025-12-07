@@ -1,0 +1,144 @@
+<html>
+    <head>
+        <title>My Timer</title>
+        <link href="style.css" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&family=Delius&family=Lexend+Deca:wght@100..900&family=Playwrite+DE+Grund:wght@100..400&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+    </head>
+
+    <body>
+        <section class="wrapper">
+            <h1>My Timer</h1>
+            <h2 id="tampilanWaktu"><span id="menit">25</span> : <span id="detik">00</span></h2>
+            
+            <div class="button-wrapper">
+                <button onclick="timer_1()">Start</button>
+                <button onclick="timer_2()">Rest</button>
+                <button onclick="resetTimer()">Reset</button>
+            </div>
+            <h3>Total waktu produktif : <span id="totalWaktu">-</span></h3>
+        </section>
+
+        <script>
+            // Minta izin notifikasi di awal
+            if(Notification.permission !== "granted"){
+                Notification.requestPermission();
+            }
+
+            // Ganti nama variabel agar tidak bentrok dengan ID HTML
+            let elemenTampilan = document.getElementById("tampilanWaktu");
+            let waktuMenit = document.getElementById("menit");
+            let waktuDetik = document.getElementById("detik");
+            let hitungMenit = document.getElementById("totalWaktu");
+            
+            let refTampilan = null;
+            let beepBerulang = null;
+            let totalWaktu = 0;
+
+            // Inisialisasi Audio Context SEKALI saja di luar fungsi beep untuk mencegah memori penuh
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            function beep(){
+                // Kita perlu resume audio context jika statusnya suspended (kebijakan browser modern)
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                let oscillator = audioCtx.createOscillator();
+                let gainNode = audioCtx.createGain();
+
+                oscillator.type = "sine";
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.5);
+            }
+
+            function resetTimer(){
+                stopTimer(); // Perbaiki typo: stopTImer -> stopTimer
+                totalWaktu = 0;
+                hitungMenit.textContent = "-";
+                elemenTampilan.innerHTML = `<span id="menit">25</span> : <span id="detik">00</span>`;
+                
+                // Refresh referensi elemen karena innerHTML direplace
+                waktuMenit = document.getElementById("menit");
+                waktuDetik = document.getElementById("detik");
+            }
+
+            function stopTimer(){
+                if(refTampilan) clearInterval(refTampilan);
+                if(beepBerulang) clearInterval(beepBerulang);
+                refTampilan = null;
+                beepBerulang = null;
+            }
+
+            // Ganti nama argumen 'tulisan' menjadi 'pesan' agar tidak bentrok dengan variabel global
+            function mulaiTimer(menit, detik, pesan){
+                stopTimer(); // Pastikan timer sebelumnya berhenti dulu
+                
+                // Pastikan audio context siap saat user klik tombol
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                
+                elemenTampilan.innerHTML = `<span id="menit"></span> : <span id="detik"></span>`;
+                waktuMenit = document.getElementById("menit");
+                waktuDetik = document.getElementById("detik");  
+                
+                const durasiMs = (menit * 60 * 1000) + (detik * 1000) + 999;
+                const targetWaktu = Date.now() + durasiMs;
+
+                function updateTampilan(){
+                    const sisaWaktuMs = targetWaktu - Date.now();
+
+                    if(sisaWaktuMs <= 0){
+                        stopTimer(); // Hentikan timer segera
+                        
+                        // Set tampilan ke 00:00 agar rapi
+                        waktuMenit.textContent = "00";
+                        waktuDetik.textContent = "00";
+                        
+                        // Kirim Notifikasi
+                        if(Notification.permission === "granted"){
+                            new Notification("Time is Up!", {
+                                body: pesan // Sekarang 'pesan' berisi string yang benar
+                            });
+                        }
+
+                        // Bunyikan alarm
+                        beep(); // Bunyi sekali langsung
+                        beepBerulang = setInterval(beep, 1000); // Lalu ulang tiap detik
+
+                        elemenTampilan.textContent = pesan;
+                        return; // Keluar dari fungsi agar kode di bawah tidak dijalankan
+                    }
+
+                    const sisaMenit = Math.floor(sisaWaktuMs / 60000);
+                    const sisaDetik = Math.floor((sisaWaktuMs % 60000) / 1000);
+
+                    waktuMenit.textContent = (sisaMenit < 10 ? "0" : "") + sisaMenit;
+                    waktuDetik.textContent = (sisaDetik < 10 ? "0" : "") + sisaDetik;
+                }
+
+                updateTampilan(); // Jalankan sekali di awal
+                refTampilan = setInterval(updateTampilan, 1000); // Jalankan loop
+            }
+
+            function timer_1(){
+                mulaiTimer(25, 0, "Time to rest");
+            }
+
+            function timer_2(){
+                totalWaktu++;
+                let hasilWaktu = totalWaktu * 30;
+                hitungMenit.textContent = hasilWaktu + " menit";
+
+                mulaiTimer(5, 0, "Let's get back to work!");
+            }
+            
+        </script>
+    </body>
+</html>

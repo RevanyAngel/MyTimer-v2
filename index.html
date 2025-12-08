@@ -5,30 +5,385 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Delius&family=Gaegu&family=VT323&display=swap" rel="stylesheet">
-        <link href="style.css" rel="stylesheet">
         
+        <style>
+            :root {
+                --bg-color: #fdf6e3;
+                --card-bg: #fffbf0;
+                --accent-pink: #ffcad4;
+                --accent-green: #b0c4b1;
+                --accent-brown: #5e503f;
+                --accent-blue: #cae9ff;
+                --postit-yellow: #fff475;
+                --paper-line: #aaccff;
+                --text-color: #4a403a;
+                --shadow-color: #d4a373;
+            }
+
+            body {
+                background-color: var(--bg-color);
+                background-image: radial-gradient(var(--shadow-color) 1px, transparent 1px);
+                background-size: 20px 20px;
+                font-family: 'Delius', cursive;
+                color: var(--text-color);
+                margin: 0;
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center; /* Center vertical */
+                padding: 20px;
+                box-sizing: border-box;
+            }
+
+            /* Container Utama untuk mengatur Layout 3 Kolom */
+            .main-container {
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                gap: 40px;
+                flex-wrap: wrap; /* Agar responsif di HP */
+                max-width: 1200px;
+                width: 100%;
+            }
+
+            /* --- STYLE UMUM --- */
+            h2 {
+                font-family: 'Gaegu', cursive;
+                margin: 0 0 10px 0;
+                color: var(--accent-brown);
+                border-bottom: 2px dashed var(--accent-brown);
+                padding-bottom: 5px;
+            }
+
+            ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+
+            li {
+                font-family: 'Gaegu', cursive;
+                font-size: 1.2rem;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                text-align: left;
+                word-break: break-word;
+            }
+
+            /* Input Style yang sama untuk kedua list */
+            .input-group {
+                display: flex;
+                gap: 5px;
+                margin-bottom: 15px;
+            }
+
+            input[type="text"] {
+                width: 100%;
+                border: none;
+                border-bottom: 2px solid var(--accent-brown);
+                background: transparent;
+                font-family: 'Gaegu', cursive;
+                font-size: 1.1rem;
+                padding: 5px;
+                outline: none;
+                color: var(--accent-brown);
+            }
+
+            .btn-add {
+                background: var(--accent-brown);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-family: 'VT323', monospace;
+                font-size: 1.2rem;
+                cursor: pointer;
+                padding: 0 10px;
+            }
+
+            /* --- KOLOM KIRI: DISTRACTION LIST (POST-IT STYLE) --- */
+            .distraction-card {
+                background-color: var(--postit-yellow);
+                width: 280px;
+                padding: 25px;
+                box-shadow: 5px 5px 10px rgba(0,0,0,0.1);
+                position: relative;
+                transform: rotate(-2deg); /* Miring sedikit biar natural */
+                transition: transform 0.3s;
+            }
+
+            .distraction-card:hover {
+                transform: rotate(0deg) scale(1.02);
+                z-index: 10;
+            }
+
+            /* Hiasan Selotip Merah di Post-it */
+            .distraction-card::before {
+                content: '';
+                position: absolute;
+                top: -15px;
+                left: 35%;
+                width: 100px;
+                height: 30px;
+                background-color: rgba(255, 100, 100, 0.5);
+                transform: rotate(-3deg);
+                box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+            }
+
+            .distraction-list li::before {
+                content: '•';
+                color: var(--accent-brown);
+                font-size: 1.5rem;
+            }
+
+            /* --- KOLOM TENGAH: TIMER (EXISTING) --- */
+            .timer-wrapper {
+                background: var(--card-bg);
+                padding: 40px;
+                border: 4px solid var(--accent-brown);
+                border-radius: 25px;
+                box-shadow: 12px 12px 0px var(--shadow-color);
+                text-align: center;
+                width: 320px;
+                position: relative;
+                z-index: 5; /* Agar timer selalu di atas tumpukan saat mobile */
+            }
+
+            .timer-wrapper::before {
+                content: '';
+                position: absolute;
+                top: -15px;
+                left: 50%;
+                transform: translateX(-50%) rotate(-2deg);
+                width: 120px;
+                height: 35px;
+                background-color: rgba(255, 255, 255, 0.6);
+                border: 1px solid #ddd;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 10px;
+                margin-top: 0;
+                color: var(--accent-brown);
+                text-shadow: 2px 2px 0px var(--accent-pink);
+            }
+
+            #tampilanWaktu {
+                font-family: 'VT323', monospace;
+                font-size: 5rem;
+                margin: 20px 0;
+                color: var(--accent-brown);
+                background: #f4f1ea;
+                border: 3px solid var(--accent-brown);
+                border-radius: 10px;
+                padding: 10px;
+                box-shadow: inset 4px 4px 0px rgba(0,0,0,0.05);
+            }
+
+            .button-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                margin-bottom: 25px;
+            }
+
+            button {
+                font-family: 'Gaegu', cursive;
+                font-size: 1.5rem;
+                padding: 10px 20px;
+                border: 3px solid var(--accent-brown);
+                border-radius: 15px;
+                cursor: pointer;
+                transition: all 0.1s;
+                text-transform: uppercase;
+                font-weight: bold;
+                outline: none;
+            }
+
+            #btnMain {
+                background-color: var(--accent-blue);
+                color: var(--accent-brown);
+                box-shadow: 5px 5px 0px var(--accent-brown);
+            }
+
+            #btnMain:active {
+                transform: translate(3px, 3px);
+                box-shadow: 2px 2px 0px var(--accent-brown);
+            }
+
+            .secondary-buttons {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+            }
+
+            .btn-small {
+                flex: 1;
+                font-size: 1.2rem;
+                padding: 8px;
+                background-color: var(--accent-green);
+                box-shadow: 4px 4px 0px var(--accent-brown);
+            }
+
+            .btn-reset {
+                background-color: #fff;
+                box-shadow: 4px 4px 0px var(--accent-brown);
+            }
+
+            .btn-small:active, .btn-reset:active {
+                transform: translate(2px, 2px);
+                box-shadow: 2px 2px 0px var(--accent-brown);
+            }
+
+            h3 {
+                font-size: 1rem;
+                border-top: 2px dashed var(--accent-brown);
+                padding-top: 15px;
+                margin-top: 10px;
+            }
+
+            /* --- KOLOM KANAN: TO DO LIST (NOTEPAD STYLE) --- */
+            .todo-card {
+                background-color: #fff;
+                width: 280px;
+                padding: 25px 25px 40px 25px; /* Bottom padding lebih besar */
+                box-shadow: 8px 8px 0px var(--shadow-color);
+                border: 2px solid var(--accent-brown);
+                border-radius: 5px;
+                position: relative;
+                transform: rotate(1deg);
+                /* Efek garis buku */
+                background-image: repeating-linear-gradient(#fff 0px, #fff 24px, var(--paper-line) 25px);
+            }
+            
+            /* Spiral buku di atas */
+            .todo-card::before {
+                content: '';
+                position: absolute;
+                top: -15px;
+                left: 10px;
+                right: 10px;
+                height: 20px;
+                background-image: radial-gradient(circle, var(--accent-brown) 30%, transparent 35%);
+                background-size: 20px 20px;
+                background-repeat: repeat-x;
+            }
+
+            /* Custom Checkbox */
+            .todo-item input[type="checkbox"] {
+                appearance: none;
+                -webkit-appearance: none;
+                width: 20px;
+                height: 20px;
+                border: 2px solid var(--accent-brown);
+                border-radius: 50%;
+                margin-right: 10px;
+                cursor: pointer;
+                position: relative;
+                flex-shrink: 0;
+            }
+
+            .todo-item input[type="checkbox"]:checked {
+                background-color: var(--accent-green);
+            }
+
+            .todo-item input[type="checkbox"]:checked::after {
+                content: '✔';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 12px;
+                color: var(--accent-brown);
+            }
+
+            .todo-text {
+                transition: color 0.3s, text-decoration 0.3s;
+                cursor: pointer;
+            }
+
+            .todo-item.completed .todo-text {
+                text-decoration: line-through;
+                text-decoration-thickness: 2px;
+                text-decoration-color: var(--accent-pink);
+                color: #aaa;
+            }
+
+            /* Hapus Button kecil */
+            .btn-delete {
+                background: none;
+                border: none;
+                color: #ff6b6b;
+                font-weight: bold;
+                cursor: pointer;
+                margin-left: auto;
+                font-family: 'Gaegu';
+            }
+
+            /* --- RESPONSIVE MOBILE --- */
+            @media (max-width: 950px) {
+                .main-container {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                
+                /* Mengatur urutan di mobile: Timer paling atas */
+                .timer-wrapper { order: 1; width: 100%; max-width: 320px; }
+                .todo-card { order: 2; width: 100%; max-width: 320px; transform: rotate(0deg); }
+                .distraction-card { order: 3; width: 100%; max-width: 320px; transform: rotate(0deg); }
+            }
+        </style>
     </head>
 
     <body>
-        <section class="wrapper">
-            <h1>Pomodoro</h1>
-            <div id="tampilanWaktu">
-                <span id="menit">25</span>:<span id="detik">00</span>
-            </div>
+        <div class="main-container">
             
-            <div class="button-wrapper">
-                <button id="btnMain" onclick="actionMainButton()">Start Work</button>
-                
-                <div class="secondary-buttons">
-                    <button class="btn-small" onclick="timer_Rest()">Rest</button>
-                    <button class="btn-small btn-reset" onclick="resetTimer()">Reset</button>
+            <section class="distraction-card">
+                <h2>Distractions</h2>
+                <div class="input-group">
+                    <input type="text" id="inputDistraction" placeholder="What distracted you?">
+                    <button class="btn-add" onclick="addDistraction()">+</button>
                 </div>
-            </div>
-            <h3>Total Focus: <span id="totalWaktu">0</span> min</h3>
-        </section>
+                <ul id="listDistraction" class="distraction-list">
+                    </ul>
+            </section>
+
+            <section class="timer-wrapper">
+                <h1>Pomodoro</h1>
+                <div id="tampilanWaktu">
+                    <span id="menit">25</span>:<span id="detik">00</span>
+                </div>
+                
+                <div class="button-wrapper">
+                    <button id="btnMain" onclick="actionMainButton()">Start Work</button>
+                    
+                    <div class="secondary-buttons">
+                        <button class="btn-small" onclick="timer_Rest()">Rest</button>
+                        <button class="btn-small btn-reset" onclick="resetTimer()">Reset</button>
+                    </div>
+                </div>
+                <h3>Total Focus: <span id="totalWaktu">0</span> min</h3>
+            </section>
+
+            <section class="todo-card">
+                <h2>To Do List</h2>
+                <div class="input-group">
+                    <input type="text" id="inputTodo" placeholder="Add task...">
+                    <button class="btn-add" onclick="addTodo()">+</button>
+                </div>
+                <ul id="listTodo">
+                    </ul>
+            </section>
+
+        </div>
 
         <script>
-            // --- VARIABEL GLOBAL ---
+            // --- LOGIKA TIMER (EXISTING) ---
             let elemenTampilan = document.getElementById("tampilanWaktu");
             let waktuMenit = document.getElementById("menit");
             let waktuDetik = document.getElementById("detik");
@@ -37,11 +392,8 @@
 
             let refTampilan = null;
             let beepBerulang = null;
-            
-            // Variabel Penyimpanan Total Waktu (Akumulasi)
             let totalMenitFokus = 0; 
             
-            // Variabel Logika
             let targetWaktu = 0;
             let sisaWaktuSimpan = 0;
             let pesanGlobal = "";
@@ -50,7 +402,6 @@
             let isRinging = false; 
             let currentMode = "WORK"; 
 
-            // --- AUDIO CONTEXT ---
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
             if(Notification.permission !== "granted"){
@@ -69,22 +420,13 @@
                 oscillator.stop(audioCtx.currentTime + 0.5);
             }
 
-            // --- LOGIKA TOMBOL UTAMA ---
             function actionMainButton() {
-                if (isRinging) {
-                    resetTimer(); // Matikan suara
-                    return;
-                }
-                if (!isRunning && !isPaused) {
-                    timer_Work(); 
-                } else if (isRunning) {
-                    togglePause();
-                } else if (isPaused) {
-                    togglePause();
-                }
+                if (isRinging) { resetTimer(); return; }
+                if (!isRunning && !isPaused) { timer_Work(); } 
+                else if (isRunning) { togglePause(); } 
+                else if (isPaused) { togglePause(); }
             }
 
-            // Fungsi untuk Mengubah Teks Tombol Sesuai Status
             function updateButtonUI() {
                 if (isRinging) {
                     btnMain.textContent = "STOP ALARM";
@@ -99,22 +441,17 @@
                     btnMain.style.backgroundColor = "#ffe599"; 
                     btnMain.style.color = "#5e503f";
                 } else {
-                    // Posisi Reset / Awal (Warna Biru sesuai CSS)
                     btnMain.textContent = "Start Work";
                     btnMain.style.backgroundColor = "#cae9ff"; 
                     btnMain.style.color = "#5e503f";
                 }
             }
 
-            // --- LOGIKA TIMER ---
             function updateTampilan(){
                 const sisaWaktuMs = targetWaktu - Date.now();
                 sisaWaktuSimpan = sisaWaktuMs;
 
-                if(sisaWaktuMs <= 0){
-                    finishTimer();
-                    return; 
-                }
+                if(sisaWaktuMs <= 0){ finishTimer(); return; }
 
                 const sisaMenit = Math.floor(sisaWaktuMs / 60000);
                 const sisaDetik = Math.floor((sisaWaktuMs % 60000) / 1000);
@@ -125,47 +462,32 @@
 
             function finishTimer() {
                 stopTimer(); 
-                
                 waktuMenit.textContent = "00";
                 waktuDetik.textContent = "00";
-                
-                isRunning = false;
-                isPaused = false;
-                isRinging = true; 
+                isRunning = false; isPaused = false; isRinging = true; 
 
-                // LOGIKA BARU: Tambah Total Focus hanya jika timer WORK selesai
                 if(currentMode === "WORK") {
-                    totalMenitFokus += 25; // Tambah 25 menit
-                    hitungMenit.textContent = totalMenitFokus; // Tampilkan
+                    totalMenitFokus += 25; 
+                    hitungMenit.textContent = totalMenitFokus; 
                 }
-
                 if(Notification.permission === "granted"){
                     new Notification("Time is Up!", { body: pesanGlobal });
                 }
-
                 beep(); 
                 beepBerulang = setInterval(beep, 1000);
-                
                 updateButtonUI(); 
             }
 
             function mulaiTimer(menit, detik, pesan, mode){
                 stopTimer(); 
-                
                 if (audioCtx.state === 'suspended') audioCtx.resume();
-
                 elemenTampilan.innerHTML = `<span id="menit"></span>:<span id="detik"></span>`;
                 waktuMenit = document.getElementById("menit");
                 waktuDetik = document.getElementById("detik");  
-                
                 pesanGlobal = pesan;
                 currentMode = mode;
                 sisaWaktuSimpan = (menit * 60 * 1000) + (detik * 1000) + 999;
-                
-                isRunning = true;
-                isPaused = false;
-                isRinging = false; 
-                
+                isRunning = true; isPaused = false; isRinging = false; 
                 jalankanInterval();
                 updateButtonUI(); 
             }
@@ -178,14 +500,10 @@
 
             function togglePause(){
                 if(!isRunning && !isPaused) return; 
-
                 if(isPaused){
-                    isPaused = false;
-                    isRunning = true;
-                    jalankanInterval();
+                    isPaused = false; isRunning = true; jalankanInterval();
                 } else {
-                    isPaused = true;
-                    isRunning = false;
+                    isPaused = true; isRunning = false;
                     if(refTampilan) clearInterval(refTampilan);
                     refTampilan = null;
                 }
@@ -195,34 +513,84 @@
             function stopTimer(){
                 if(refTampilan) clearInterval(refTampilan);
                 if(beepBerulang) clearInterval(beepBerulang);
-                refTampilan = null;
-                beepBerulang = null;
+                refTampilan = null; beepBerulang = null;
             }
 
             function resetTimer(){
                 stopTimer(); 
-                isRunning = false;
-                isPaused = false;
-                isRinging = false; 
-                
+                isRunning = false; isPaused = false; isRinging = false; 
                 waktuMenit.textContent = "25";
                 waktuDetik.textContent = "00";
-                
-                // CATATAN PENTING:
-                // Variabel totalMenitFokus TIDAK di-reset menjadi 0 di sini.
-                // Jadi angka total focus akan tetap ada.
-                
                 updateButtonUI();
             }
 
-            // --- FUNGSI PRESET ---
-            function timer_Work(){
-                mulaiTimer(25, 0, "Time to rest!", "WORK");
+            function timer_Work(){ mulaiTimer(25, 0, "Time to rest!", "WORK"); }
+            function timer_Rest(){ mulaiTimer(5, 0, "Back to work!", "REST"); }
+
+            // --- LOGIKA DISTRACTION LIST ---
+            let distractionInput = document.getElementById("inputDistraction");
+            let distractionList = document.getElementById("listDistraction");
+
+            // Tambah dengan tombol enter
+            distractionInput.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") { addDistraction(); }
+            });
+
+            function addDistraction() {
+                let text = distractionInput.value.trim();
+                if(text === "") return;
+
+                let li = document.createElement("li");
+                li.innerHTML = `
+                    <span>${text}</span>
+                    <button class="btn-delete" onclick="this.parentElement.remove()">x</button>
+                `;
+                distractionList.appendChild(li);
+                distractionInput.value = "";
             }
 
-            function timer_Rest(){
-                mulaiTimer(5, 0, "Back to work!", "REST");
+            // --- LOGIKA TO DO LIST ---
+            let todoInput = document.getElementById("inputTodo");
+            let todoList = document.getElementById("listTodo");
+
+            // Tambah dengan tombol enter
+            todoInput.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") { addTodo(); }
+            });
+
+            function addTodo() {
+                let text = todoInput.value.trim();
+                if(text === "") return;
+
+                let li = document.createElement("li");
+                li.className = "todo-item";
+                
+                // Struktur: Checkbox - Text - Tombol Hapus
+                li.innerHTML = `
+                    <input type="checkbox" onchange="toggleTodo(this)">
+                    <span class="todo-text" onclick="clickText(this)">${text}</span>
+                    <button class="btn-delete" onclick="this.parentElement.remove()">x</button>
+                `;
+                todoList.appendChild(li);
+                todoInput.value = "";
             }
+
+            function toggleTodo(checkbox) {
+                let li = checkbox.parentElement;
+                if(checkbox.checked) {
+                    li.classList.add("completed");
+                } else {
+                    li.classList.remove("completed");
+                }
+            }
+
+            // Fitur tambahan: klik teks untuk centang checkbox
+            function clickText(span) {
+                let checkbox = span.parentElement.querySelector('input[type="checkbox"]');
+                checkbox.checked = !checkbox.checked;
+                toggleTodo(checkbox);
+            }
+
         </script>
     </body>
 </html>

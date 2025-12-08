@@ -1,71 +1,188 @@
+<!DOCTYPE html>
 <html>
     <head>
-        <title>My Timer</title>
-        <link href="style.css" rel="stylesheet">
+        <title>Vintage Timer</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&family=Delius&family=Lexend+Deca:wght@100..900&family=Playwrite+DE+Grund:wght@100..400&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Delius&family=Gaegu&family=VT323&display=swap" rel="stylesheet">
+        <link href="style.css" rel="stylesheet">
+        
     </head>
 
     <body>
         <section class="wrapper">
-            <h1>My Timer</h1>
-            <h2 id="tampilanWaktu"><span id="menit">25</span> : <span id="detik">00</span></h2>
+            <h1>Pomodoro</h1>
+            <div id="tampilanWaktu">
+                <span id="menit">25</span>:<span id="detik">00</span>
+            </div>
             
             <div class="button-wrapper">
-                <button onclick="timer_1()">Start</button>
-                <button onclick="timer_2()">Rest</button>
-                <button onclick="resetTimer()">Reset</button>
+                <button id="btnMain" onclick="actionMainButton()">Start Work</button>
+                
+                <div class="secondary-buttons">
+                    <button class="btn-small" onclick="timer_Rest()">Rest (5m)</button>
+                    <button class="btn-small btn-reset" onclick="resetTimer()">Reset</button>
+                </div>
             </div>
-            <h3>Total waktu produktif : <span id="totalWaktu">-</span></h3>
+            <h3>Total Focus: <span id="totalWaktu">0</span> min</h3>
         </section>
 
         <script>
-            // Minta izin notifikasi di awal
-            if(Notification.permission !== "granted"){
-                Notification.requestPermission();
-            }
-
-            // Ganti nama variabel agar tidak bentrok dengan ID HTML
+            // --- VARIABEL GLOBAL ---
             let elemenTampilan = document.getElementById("tampilanWaktu");
             let waktuMenit = document.getElementById("menit");
             let waktuDetik = document.getElementById("detik");
             let hitungMenit = document.getElementById("totalWaktu");
-            
+            let btnMain = document.getElementById("btnMain");
+
             let refTampilan = null;
             let beepBerulang = null;
-            let totalWaktu = 0;
+            let totalWaktu = 0; // Hitungan sesi
+            
+            // Variabel Logika
+            let targetWaktu = 0;
+            let sisaWaktuSimpan = 0;
+            let pesanGlobal = "";
+            let isPaused = false;
+            let isRunning = false; 
+            let currentMode = "WORK"; // "WORK" atau "REST"
 
-            // Inisialisasi Audio Context SEKALI saja di luar fungsi beep untuk mencegah memori penuh
+            // --- AUDIO CONTEXT ---
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-            function beep(){
-                // Kita perlu resume audio context jika statusnya suspended (kebijakan browser modern)
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
+            // Izin Notifikasi
+            if(Notification.permission !== "granted"){
+                Notification.requestPermission();
+            }
 
+            function beep(){
+                if (audioCtx.state === 'suspended') audioCtx.resume();
                 let oscillator = audioCtx.createOscillator();
                 let gainNode = audioCtx.createGain();
-
                 oscillator.type = "sine";
                 oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
-                
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + 0.5);
             }
 
-            function resetTimer(){
-                stopTimer(); // Perbaiki typo: stopTImer -> stopTimer
-                totalWaktu = 0;
-                hitungMenit.textContent = "-";
-                elemenTampilan.innerHTML = `<span id="menit">25</span> : <span id="detik">00</span>`;
+            // --- LOGIKA TOMBOL UTAMA (START / PAUSE / RESUME) ---
+            function actionMainButton() {
+                // 1. Jika Timer Belum Jalan & Tidak Pause (Posisi Awal)
+                if (!isRunning && !isPaused) {
+                    timer_Work(); // Mulai timer 25 menit
+                } 
+                // 2. Jika Sedang Jalan (User mau Pause)
+                else if (isRunning) {
+                    togglePause();
+                } 
+                // 3. Jika Sedang Pause (User mau Resume)
+                else if (isPaused) {
+                    togglePause();
+                }
+            }
+
+            // Fungsi untuk Mengubah Teks Tombol Sesuai Status
+            function updateButtonUI() {
+                if (isRunning) {
+                    btnMain.textContent = "Pause";
+                    btnMain.style.backgroundColor = "#ffcad4"; // Pink
+                } else if (isPaused) {
+                    btnMain.textContent = "Resume";
+                    btnMain.style.backgroundColor = "#ffe599"; // Kuning vintage
+                } else {
+                    // Posisi Reset / Awal
+                    btnMain.textContent = "Start Work";
+                    btnMain.style.backgroundColor = "#ffcad4";
+                }
+            }
+
+            // --- LOGIKA TIMER ---
+            function updateTampilan(){
+                const sisaWaktuMs = targetWaktu - Date.now();
+                sisaWaktuSimpan = sisaWaktuMs;
+
+                if(sisaWaktuMs <= 0){
+                    finishTimer();
+                    return; 
+                }
+
+                const sisaMenit = Math.floor(sisaWaktuMs / 60000);
+                const sisaDetik = Math.floor((sisaWaktuMs % 60000) / 1000);
+
+                waktuMenit.textContent = (sisaMenit < 10 ? "0" : "") + sisaMenit;
+                waktuDetik.textContent = (sisaDetik < 10 ? "0" : "") + sisaDetik;
+            }
+
+            function finishTimer() {
+                stopTimer();
+                waktuMenit.textContent = "00";
+                waktuDetik.textContent = "00";
+                isRunning = false;
+                isPaused = false;
                 
-                // Refresh referensi elemen karena innerHTML direplace
+                // Tambah waktu produktif jika yang selesai adalah mode WORK
+                if(currentMode === "WORK") {
+                    totalWaktu++;
+                    let hasilWaktu = totalWaktu * 25; 
+                    hitungMenit.textContent = hasilWaktu;
+                }
+
+                if(Notification.permission === "granted"){
+                    new Notification("Time is Up!", { body: pesanGlobal });
+                }
+
+                beep();
+                beepBerulang = setInterval(beep, 1000);
+                
+                // Ubah tombol jadi Reset atau Start Baru
+                btnMain.textContent = "Done (Reset)";
+            }
+
+            function mulaiTimer(menit, detik, pesan, mode){
+                stopTimer();
+                
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                // Reset Tampilan
+                elemenTampilan.innerHTML = `<span id="menit"></span>:<span id="detik"></span>`;
                 waktuMenit = document.getElementById("menit");
-                waktuDetik = document.getElementById("detik");
+                waktuDetik = document.getElementById("detik");  
+                
+                pesanGlobal = pesan;
+                currentMode = mode;
+                sisaWaktuSimpan = (menit * 60 * 1000) + (detik * 1000) + 999;
+                
+                isRunning = true;
+                isPaused = false;
+                
+                jalankanInterval();
+                updateButtonUI(); // Update tombol jadi "Pause"
+            }
+
+            function jalankanInterval(){
+                targetWaktu = Date.now() + sisaWaktuSimpan;
+                updateTampilan();
+                refTampilan = setInterval(updateTampilan, 1000);
+            }
+
+            function togglePause(){
+                if(!isRunning && !isPaused) return; 
+
+                if(isPaused){
+                    // RESUME
+                    isPaused = false;
+                    isRunning = true;
+                    jalankanInterval();
+                } else {
+                    // PAUSE
+                    isPaused = true;
+                    isRunning = false;
+                    if(refTampilan) clearInterval(refTampilan);
+                    refTampilan = null;
+                }
+                updateButtonUI(); // Update teks tombol
             }
 
             function stopTimer(){
@@ -75,70 +192,28 @@
                 beepBerulang = null;
             }
 
-            // Ganti nama argumen 'tulisan' menjadi 'pesan' agar tidak bentrok dengan variabel global
-            function mulaiTimer(menit, detik, pesan){
-                stopTimer(); // Pastikan timer sebelumnya berhenti dulu
+            function resetTimer(){
+                stopTimer();
+                isRunning = false;
+                isPaused = false;
                 
-                // Pastikan audio context siap saat user klik tombol
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
+                waktuMenit.textContent = "25";
+                waktuDetik.textContent = "00";
                 
-                elemenTampilan.innerHTML = `<span id="menit"></span> : <span id="detik"></span>`;
-                waktuMenit = document.getElementById("menit");
-                waktuDetik = document.getElementById("detik");  
-                
-                const durasiMs = (menit * 60 * 1000) + (detik * 1000) + 999;
-                const targetWaktu = Date.now() + durasiMs;
-
-                function updateTampilan(){
-                    const sisaWaktuMs = targetWaktu - Date.now();
-
-                    if(sisaWaktuMs <= 0){
-                        stopTimer(); // Hentikan timer segera
-                        
-                        // Set tampilan ke 00:00 agar rapi
-                        waktuMenit.textContent = "00";
-                        waktuDetik.textContent = "00";
-                        
-                        // Kirim Notifikasi
-                        if(Notification.permission === "granted"){
-                            new Notification("Time is Up!", {
-                                body: pesan // Sekarang 'pesan' berisi string yang benar
-                            });
-                        }
-
-                        // Bunyikan alarm
-                        beep(); // Bunyi sekali langsung
-                        beepBerulang = setInterval(beep, 1000); // Lalu ulang tiap detik
-
-                        elemenTampilan.textContent = pesan;
-                        return; // Keluar dari fungsi agar kode di bawah tidak dijalankan
-                    }
-
-                    const sisaMenit = Math.floor(sisaWaktuMs / 60000);
-                    const sisaDetik = Math.floor((sisaWaktuMs % 60000) / 1000);
-
-                    waktuMenit.textContent = (sisaMenit < 10 ? "0" : "") + sisaMenit;
-                    waktuDetik.textContent = (sisaDetik < 10 ? "0" : "") + sisaDetik;
-                }
-
-                updateTampilan(); // Jalankan sekali di awal
-                refTampilan = setInterval(updateTampilan, 1000); // Jalankan loop
+                // Reset Text Tombol
+                updateButtonUI();
             }
 
-            function timer_1(){
-                mulaiTimer(25, 0, "Time to rest");
+            // --- FUNGSI PRESET ---
+            function timer_Work(){
+                mulaiTimer(25, 0, "Time to rest!", "WORK");
             }
 
-            function timer_2(){
-                totalWaktu++;
-                let hasilWaktu = totalWaktu * 30;
-                hitungMenit.textContent = hasilWaktu + " menit";
-
-                mulaiTimer(5, 0, "Let's get back to work!");
+            function timer_Rest(){
+                // Saat Rest diklik, langsung mulai timer 5 menit
+                // Tombol utama akan berubah fungsi menjadi controller (Pause) untuk timer Rest ini
+                mulaiTimer(5, 0, "Back to work!", "REST");
             }
-            
         </script>
     </body>
 </html>

@@ -1,61 +1,132 @@
+:root {
+    --bg-color: #fdf6e3;
+    --card-bg: #fffbf0;
+    --accent-pink: #ffcad4;
+    --accent-green: #b0c4b1;
+    --accent-brown: #5e503f;
+    --text-color: #4a403a;
+    --shadow-color: #d4a373;
+}
+
 body {
-    font-family: "Playwrite DE Grund", cursive;  
-    font-weight: bold;                                          
+    background-color: var(--bg-color);
+    background-image: radial-gradient(var(--shadow-color) 1px, transparent 1px);
+    background-size: 20px 20px; /* Polkadot pattern */
+    font-family: 'Delius', cursive;
+    color: var(--text-color);
     display: flex;
-    height: 100vh;
-    align-items: center;
     justify-content: center;
-    background-color: #ECF2F9;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
 }
 
 .wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #C8D9EB;
-    width: 70vw;
-    max-width: 800px;
-    height: fit-content;
-    padding: 1rem;
-    border: 2px solid #ddd;
+    background: var(--card-bg);
+    padding: 40px;
+    border: 4px solid var(--accent-brown);
     border-radius: 25px;
-    box-shadow: 0 5px 5px rgba(0,0,0,0.2);
+    box-shadow: 12px 12px 0px var(--shadow-color);
+    text-align: center;
+    max-width: 350px;
+    width: 100%;
+    position: relative;
+}
+
+/* Hiasan "Tape" di atas kartu */
+.wrapper::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 35px;
+    background-color: rgba(255, 255, 255, 0.6);
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transform: translateX(-50%) rotate(-2deg);
 }
 
 h1 {
-    margin: 0;
-    padding: 1rem;
-    font-size: 2rem;
-    /* font-weight: lighter; */
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    color: var(--accent-brown);
+    text-shadow: 2px 2px 0px var(--accent-pink);
 }
 
-h2 {
-    font-family: "Lexend Deca", sans-serif;
-    margin: 0 1rem 1rem 1rem;
-    text-align: center;
-    font-size: 6rem;
-    font-weight: 200;
+#tampilanWaktu {
+    font-family: 'VT323', monospace; /* Font digital retro */
+    font-size: 5rem;
+    margin: 20px 0;
+    color: var(--accent-brown);
+    background: #f4f1ea;
+    border: 3px solid var(--accent-brown);
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: inset 4px 4px 0px rgba(0,0,0,0.05);
 }
 
 .button-wrapper {
-    /* background-color: tomato; */
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
 }
 
 button {
-    font-family: "Playwrite DE Grund", cursive;  
-    width: 8rem;
-    padding: .3rem;
+    font-family: 'Gaegu', cursive;
+    font-size: 1.5rem;
+    padding: 10px 20px;
+    border: 3px solid var(--accent-brown);
     border-radius: 15px;
-    border: 2px solid #ddd;
-    background-color: #FFF1CB;
-    box-shadow: 0 5px 5px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
+    cursor: pointer;
+    transition: all 0.1s;
+    text-transform: uppercase;
+    font-weight: bold;
+    outline: none;
+    position: relative;
 }
 
-button:hover {
-    background-color: #ece0bc;
-    scale: 1.1;
+/* Style tombol Main (Start/Pause/Resume) */
+#btnMain {
+    background-color: var(--accent-pink);
+    color: var(--accent-brown);
+    box-shadow: 5px 5px 0px var(--accent-brown);
+}
+
+#btnMain:active {
+    transform: translate(3px, 3px);
+    box-shadow: 2px 2px 0px var(--accent-brown);
+}
+
+.secondary-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-small {
+    flex: 1;
+    font-size: 1.2rem;
+    padding: 8px;
+    background-color: var(--accent-green);
+    box-shadow: 4px 4px 0px var(--accent-brown);
+}
+
+.btn-reset {
+    background-color: #fff;
+    box-shadow: 4px 4px 0px var(--accent-brown);
+}
+
+.btn-small:active, .btn-reset:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--accent-brown);
+}
+
+h3 {
+    font-size: 1rem;
+    border-top: 2px dashed var(--accent-brown);
+    padding-top: 15px;
+    margin-top: 10px;
 }

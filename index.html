@@ -156,7 +156,7 @@
                 box-shadow: inset 4px 4px 0px rgba(0,0,0,0.05);
             }
 
-            /* --- SETTING INPUTS (BARU) --- */
+            /* --- SETTING INPUTS --- */
             .settings-container {
                 display: flex;
                 justify-content: center;
@@ -191,8 +191,54 @@
                 color: var(--accent-brown);
                 outline: none;
             }
+
+            /* --- CUSTOM VOLUME SLIDER --- */
+            input[type=range] {
+                -webkit-appearance: none;
+                width: 80px;
+                background: transparent;
+                margin-top: 10px;
+            }
+            input[type=range]:focus { outline: none; }
             
-            /* Hapus spinner input number browser bawaan agar rapi */
+            /* Webkit (Chrome/Safari) Slider Styling */
+            input[type=range]::-webkit-slider-runnable-track {
+                width: 100%;
+                height: 8px;
+                cursor: pointer;
+                background: var(--accent-green);
+                border-radius: 5px;
+                border: 2px solid var(--accent-brown);
+            }
+            input[type=range]::-webkit-slider-thumb {
+                height: 16px;
+                width: 16px;
+                border-radius: 50%;
+                background: var(--accent-pink);
+                border: 2px solid var(--accent-brown);
+                cursor: pointer;
+                -webkit-appearance: none;
+                margin-top: -6px; /* Center thumb vertically */
+            }
+
+            /* Firefox Slider Styling */
+            input[type=range]::-moz-range-track {
+                width: 100%;
+                height: 8px;
+                cursor: pointer;
+                background: var(--accent-green);
+                border-radius: 5px;
+                border: 2px solid var(--accent-brown);
+            }
+            input[type=range]::-moz-range-thumb {
+                height: 16px;
+                width: 16px;
+                border: 2px solid var(--accent-brown);
+                border-radius: 50%;
+                background: var(--accent-pink);
+                cursor: pointer;
+            }
+            
             input[type=number]::-webkit-inner-spin-button, 
             input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
@@ -272,6 +318,10 @@
                         <label>Rest (min)</label>
                         <input type="number" id="inputRestTime" value="5" min="1">
                     </div>
+                    <div class="setting-item">
+                        <label>Volume</label>
+                        <input type="range" id="inputVolume" min="0" max="100" value="50">
+                    </div>
                 </div>
 
                 <div id="tampilanWaktu">
@@ -310,6 +360,7 @@
             // Input Settings
             let inputWorkTime = document.getElementById("inputWorkTime");
             let inputRestTime = document.getElementById("inputRestTime");
+            let inputVolume = document.getElementById("inputVolume"); // Slider Volume
 
             let refTampilan = null;
             let beepBerulang = null;
@@ -323,17 +374,25 @@
             let isRinging = false; 
             let currentMode = "WORK"; 
             
-            // Menyimpan durasi sesi saat ini untuk ditambahkan ke total nanti
             let currentSessionDuration = 0; 
 
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
             if(Notification.permission !== "granted"){ Notification.requestPermission(); }
 
+            // --- FUNGSI AUDIO (UPDATED) ---
             function beep(){
                 if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                // Ambil nilai volume dari slider (0 - 100) lalu bagi 100 agar jadi 0.0 - 1.0
+                let volumeLevel = inputVolume.value / 100;
+
                 let oscillator = audioCtx.createOscillator();
                 let gainNode = audioCtx.createGain();
+
+                // Set Volume
+                gainNode.gain.value = volumeLevel;
+
                 oscillator.type = "sine";
                 oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
                 oscillator.connect(gainNode);
@@ -341,6 +400,11 @@
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + 0.5);
             }
+
+            // Event listener agar audio context aktif saat user geser volume
+            inputVolume.addEventListener('input', function() {
+                 if (audioCtx.state === 'suspended') audioCtx.resume();
+            });
 
             function actionMainButton() {
                 if (isRinging) { resetTimer(); return; }
@@ -380,7 +444,6 @@
                 waktuMenit.textContent = "00"; waktuDetik.textContent = "00";
                 isRunning = false; isPaused = false; isRinging = true; 
                 
-                // Tambah Total Focus sesuai Durasi yang telah diset user
                 if(currentMode === "WORK") {
                     totalMenitFokus += currentSessionDuration; 
                     hitungMenit.textContent = totalMenitFokus; 
@@ -401,7 +464,6 @@
                 pesanGlobal = pesan; 
                 currentMode = mode;
                 
-                // Simpan durasi (hanya menit) untuk perhitungan total score nanti
                 if(mode === "WORK") {
                     currentSessionDuration = menit;
                 }
@@ -433,7 +495,6 @@
                 stopTimer(); 
                 isRunning = false; isPaused = false; isRinging = false; 
                 
-                // Reset tampilan ke nilai Work Time yang ada di input
                 let workVal = parseInt(inputWorkTime.value) || 25;
                 waktuMenit.textContent = (workVal < 10 ? "0" : "") + workVal;
                 waktuDetik.textContent = "00";
@@ -441,25 +502,19 @@
                 updateButtonUI();
             }
 
-            // --- FUNGSI PRESET (DINAMIS) ---
             function timer_Work(){ 
-                // Ambil nilai dari input user
                 let duration = parseInt(inputWorkTime.value);
-                // Validasi agar minimal 1 menit
                 if(!duration || duration < 1) duration = 25;
-                
                 mulaiTimer(duration, 0, "Time to rest!", "WORK"); 
             }
 
             function timer_Rest(){ 
-                // Ambil nilai dari input user
                 let duration = parseInt(inputRestTime.value);
                 if(!duration || duration < 1) duration = 5;
-
                 mulaiTimer(duration, 0, "Back to work!", "REST"); 
             }
 
-            // --- FUNGSI DRAG AND DROP ---
+            // --- DRAG AND DROP ---
             function attachDragEvents(li) {
                 li.setAttribute('draggable', true);
                 li.addEventListener('dragstart', () => { li.classList.add('dragging'); });
@@ -486,7 +541,7 @@
                 }, { offset: Number.NEGATIVE_INFINITY }).element;
             }
 
-            // --- LOGIKA LIST ---
+            // --- LIST LOGIC ---
             let distractionInput = document.getElementById("inputDistraction");
             let distractionList = document.getElementById("listDistraction");
             distractionInput.addEventListener("keypress", function(event) { if (event.key === "Enter") { addDistraction(); } });

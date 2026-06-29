@@ -293,7 +293,7 @@ function startStopwatch() {
     swRunning = true;
     swPaused = false;
     swInterval = setInterval(updateStopwatch, 100);
-    btnStopwatchMain.textContent = "Resume";
+    btnStopwatchMain.textContent = "Pause";
     btnStopwatchMain.style.backgroundColor = "#ffcad4";
     btnStopwatchMain.style.color = "#5e503f";
 }
@@ -304,8 +304,8 @@ function pauseStopwatch() {
     swInterval = null;
     swRunning = false;
     swPaused = true;
-    btnStopwatchMain.textContent = "Start";
-    btnStopwatchMain.style.backgroundColor = "#cae9ff";
+    btnStopwatchMain.textContent = "Resume";
+    btnStopwatchMain.style.backgroundColor = "#ffe599";
     btnStopwatchMain.style.color = "#5e503f";
 }
 
@@ -314,7 +314,7 @@ function resumeStopwatch() {
     swRunning = true;
     swPaused = false;
     swInterval = setInterval(updateStopwatch, 100);
-    btnStopwatchMain.textContent = "Resume";
+    btnStopwatchMain.textContent = "Pause";
     btnStopwatchMain.style.backgroundColor = "#ffcad4";
     btnStopwatchMain.style.color = "#5e503f";
 }

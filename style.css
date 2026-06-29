@@ -203,7 +203,7 @@ h1 {
 
 .btn-restart {
     width: 100%;
-    background-color: #fff;
+    background-color: #fff !important;
     box-shadow: 4px 4px 0px var(--accent-brown);
 }
 .btn-restart:active {
@@ -213,7 +213,7 @@ h1 {
 
 /* --- LAP FEATURE --- */
 .btn-lap {
-    background-color: var(--accent-pink) !important;
+    background-color: var(--accent-green) !important;
 }
 
 .laps-container {

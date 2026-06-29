@@ -6,6 +6,8 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Delius&family=Gaegu&family=VT323&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="style.css">
+        <!-- Chart.js CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </head>
 
     <body>
@@ -21,11 +23,12 @@
             </section>
 
             <section class="timer-wrapper">
-                <!-- Mode Toggle -->
                 <div class="mode-toggle">
                     <button id="btnPomodoro" class="toggle-btn active" onclick="switchMode('pomodoro')">Pomodoro</button>
                     <button id="btnStopwatch" class="toggle-btn" onclick="switchMode('stopwatch')">Stopwatch</button>
                 </div>
+
+
 
                 <h1>Reee Pomodoro</h1>
                 
@@ -57,6 +60,10 @@
                             <button class="btn-small btn-reset" onclick="resetTimer()">Reset</button>
                         </div>
                     </div>
+                    <div class="history-container" id="pomoHistoryContainer" style="display: none;">
+                        <h3 class="history-title">History</h3>
+                        <ul id="pomoHistoryList" class="history-list"></ul>
+                    </div>
                     <h3>Total Focus: <span id="totalWaktu">0</span> min</h3>
                 </div>
 
@@ -84,6 +91,26 @@
                         <ul id="historyList" class="history-list"></ul>
                     </div>
                 </div>
+
+                <!-- === REPORT MODE === -->
+                <div id="reportMode" style="display: none;">
+                    <div class="report-controls">
+                        <button class="btn-filter active" onclick="filterReport('day')">Day</button>
+                        <button class="btn-filter" onclick="filterReport('week')">Week</button>
+                        <button class="btn-filter" onclick="filterReport('month')">Month</button>
+                        <button class="btn-filter" onclick="filterReport('year')">Year</button>
+                    </div>
+
+                    <div class="chart-wrapper">
+                        <canvas id="reportChart"></canvas>
+                    </div>
+
+                    <div id="reportEmptyMessage" class="report-empty" style="display: none;">
+                        No history data found for this period.
+                    </div>
+                </div>
+
+                <button id="btnReport" class="btn-report-main" onclick="switchMode('report')">Report</button>
             </section>
 
             <section class="todo-card">

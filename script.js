@@ -95,6 +95,7 @@ function finishTimer() {
     if(currentMode === "WORK") {
         totalMenitFokus += currentSessionDuration; 
         hitungMenit.textContent = totalMenitFokus; 
+        addHistory(currentSessionDuration * 60 * 1000);
     }
     
     if(Notification.permission === "granted"){ new Notification("Time is Up!", { body: pesanGlobal }); }
@@ -249,33 +250,47 @@ let lapsList = document.getElementById("lapsList");
 let lapsContainer = document.getElementById("lapsContainer");
 
 // History variables
-let stopwatchHistory = [];
+let stopwatchHistory = JSON.parse(localStorage.getItem("stopwatchHistory")) || [];
+let customCategories = JSON.parse(localStorage.getItem("customCategories")) || ["Work", "Study", "Coding", "Exercise"];
 let historyList = document.getElementById("historyList");
 let historyContainer = document.getElementById("historyContainer");
+let pomoHistoryList = document.getElementById("pomoHistoryList");
+let pomoHistoryContainer = document.getElementById("pomoHistoryContainer");
+let reportChartInstance = null;
+let currentReportFilter = "day";
 
 function switchMode(mode) {
     currentAppMode = mode;
     let btnPomo = document.getElementById("btnPomodoro");
     let btnSw = document.getElementById("btnStopwatch");
+    let btnRep = document.getElementById("btnReport");
     let pomodoroDiv = document.getElementById("pomodoroMode");
     let stopwatchDiv = document.getElementById("stopwatchMode");
+    let reportDiv = document.getElementById("reportMode");
+
+    btnPomo.classList.remove("active");
+    btnSw.classList.remove("active");
+    btnRep.classList.remove("active");
+
+    pomodoroDiv.style.display = "none";
+    stopwatchDiv.style.display = "none";
+    reportDiv.style.display = "none";
 
     if (mode === "pomodoro") {
         btnPomo.classList.add("active");
-        btnSw.classList.remove("active");
         pomodoroDiv.style.display = "block";
-        stopwatchDiv.style.display = "none";
-
-        // Reset stopwatch saat pindah ke pomodoro
         restartStopwatch();
-    } else {
+    } else if (mode === "stopwatch") {
         btnSw.classList.add("active");
-        btnPomo.classList.remove("active");
-        pomodoroDiv.style.display = "none";
         stopwatchDiv.style.display = "block";
-
-        // Reset pomodoro saat pindah ke stopwatch
         resetTimer();
+        renderHistory();
+    } else if (mode === "report") {
+        btnRep.classList.add("active");
+        reportDiv.style.display = "block";
+        restartStopwatch();
+        resetTimer();
+        initReport();
     }
 }
 
@@ -403,31 +418,229 @@ function clearLaps() {
 
 // --- HISTORY FUNCTIONS ---
 function addHistory(ms) {
-    stopwatchHistory.push(ms);
+    let entry = {
+        id: Date.now() + Math.random().toString(36).substr(2, 9),
+        ms: ms,
+        category: "Uncategorized",
+        timestamp: Date.now()
+    };
+    stopwatchHistory.push(entry);
+    localStorage.setItem("stopwatchHistory", JSON.stringify(stopwatchHistory));
     renderHistory();
 }
 
-function deleteHistory(index) {
-    stopwatchHistory.splice(index, 1);
+function deleteHistory(id) {
+    stopwatchHistory = stopwatchHistory.filter(item => item.id !== id);
+    localStorage.setItem("stopwatchHistory", JSON.stringify(stopwatchHistory));
+    renderHistory();
+}
+
+function updateHistoryCategory(id, selectElement) {
+    let newCategory = selectElement.value;
+    if (newCategory === "__add_new__") {
+        let name = prompt("Enter new category name:");
+        if (name && name.trim()) {
+            name = name.trim();
+            if (!customCategories.includes(name)) {
+                customCategories.push(name);
+                localStorage.setItem("customCategories", JSON.stringify(customCategories));
+            }
+            newCategory = name;
+        } else {
+            let item = stopwatchHistory.find(item => item.id === id);
+            selectElement.value = item ? item.category : "Uncategorized";
+            return;
+        }
+    }
+    
+    let item = stopwatchHistory.find(item => item.id === id);
+    if (item) {
+        item.category = newCategory;
+        localStorage.setItem("stopwatchHistory", JSON.stringify(stopwatchHistory));
+    }
     renderHistory();
 }
 
 function renderHistory() {
-    if (!historyList || !historyContainer) return;
+    renderHistoryForList(historyList, historyContainer);
+    renderHistoryForList(pomoHistoryList, pomoHistoryContainer);
+}
+
+function renderHistoryForList(listElement, containerElement) {
+    if (!listElement || !containerElement) return;
     
-    historyList.innerHTML = "";
+    listElement.innerHTML = "";
     if (stopwatchHistory.length === 0) {
-        historyContainer.style.display = "none";
+        containerElement.style.display = "none";
         return;
     }
 
     for (let i = stopwatchHistory.length - 1; i >= 0; i--) {
-        let ms = stopwatchHistory[i];
+        let item = stopwatchHistory[i];
+        let ms = typeof item === 'object' ? item.ms : item;
+        let id = typeof item === 'object' ? item.id : i;
+        let currentCat = typeof item === 'object' ? item.category : "Uncategorized";
+        
         let historyNumber = i + 1;
         let li = document.createElement("li");
         li.className = "history-item";
-        li.innerHTML = `<span class="history-number">${historyNumber}</span><span class="history-time">${formatMsToTime(ms)}</span><button class="btn-delete-history" onclick="deleteHistory(${i})">x</button>`;
-        historyList.appendChild(li);
+        
+        let optionsHtml = `<option value="Uncategorized" ${currentCat === 'Uncategorized' ? 'selected' : ''}>Uncategorized</option>`;
+        customCategories.forEach(cat => {
+            if (cat !== "Uncategorized") {
+                optionsHtml += `<option value="${cat}" ${currentCat === cat ? 'selected' : ''}>${cat}</option>`;
+            }
+        });
+        optionsHtml += `<option value="__add_new__">+ Add New...</option>`;
+
+        li.innerHTML = `
+            <span class="history-number">${historyNumber}</span>
+            <span class="history-time">${formatMsToTime(ms)}</span>
+            <select class="category-select" onchange="updateHistoryCategory('${id}', this)">
+                ${optionsHtml}
+            </select>
+            <button class="btn-delete-history" onclick="deleteHistory('${id}')">x</button>
+        `;
+        listElement.appendChild(li);
     }
-    historyContainer.style.display = "block";
+    containerElement.style.display = "block";
 }
+
+// --- REPORT FUNCTIONS ---
+function filterReport(period) {
+    currentReportFilter = period;
+    document.querySelectorAll(".btn-filter").forEach(btn => {
+        btn.classList.remove("active");
+    });
+    event.target.classList.add("active");
+    initReport();
+}
+
+function initReport() {
+    let now = Date.now();
+    let limitMs = 0;
+    
+    if (currentReportFilter === "day") {
+        limitMs = 24 * 60 * 60 * 1000;
+    } else if (currentReportFilter === "week") {
+        limitMs = 7 * 24 * 60 * 60 * 1000;
+    } else if (currentReportFilter === "month") {
+        limitMs = 30 * 24 * 60 * 60 * 1000;
+    } else if (currentReportFilter === "year") {
+        limitMs = 365 * 24 * 60 * 60 * 1000;
+    }
+    
+    let filteredHistory = stopwatchHistory.filter(item => {
+        let ts = item.timestamp || now;
+        return (now - ts) <= limitMs;
+    });
+    
+    let categorySums = {};
+    filteredHistory.forEach(item => {
+        let cat = item.category || "Uncategorized";
+        let ms = item.ms || 0;
+        categorySums[cat] = (categorySums[cat] || 0) + ms;
+    });
+    
+    let labels = Object.keys(categorySums);
+    let dataPoints = labels.map(cat => Math.round((categorySums[cat] / 60000) * 100) / 100);
+
+    let chartCanvas = document.getElementById("reportChart");
+    let emptyMessage = document.getElementById("reportEmptyMessage");
+    
+    if (labels.length === 0) {
+        chartCanvas.style.display = "none";
+        emptyMessage.style.display = "block";
+        if (reportChartInstance) {
+            reportChartInstance.destroy();
+            reportChartInstance = null;
+        }
+        return;
+    }
+    
+    chartCanvas.style.display = "block";
+    emptyMessage.style.display = "none";
+    
+    let ctx = chartCanvas.getContext("2d");
+    
+    if (reportChartInstance) {
+        reportChartInstance.destroy();
+    }
+    
+    reportChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Minutes Spent',
+                data: dataPoints,
+                backgroundColor: [
+                    'rgba(255, 202, 212, 0.7)',
+                    'rgba(176, 196, 177, 0.7)',
+                    'rgba(202, 233, 255, 0.7)',
+                    'rgba(255, 244, 117, 0.7)',
+                    'rgba(94, 80, 63, 0.5)'
+                ],
+                borderColor: '#5e503f',
+                borderWidth: 2,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Minutes',
+                        font: {
+                            family: 'Gaegu',
+                            size: 14
+                        },
+                        color: '#5e503f'
+                    },
+                    ticks: {
+                        font: {
+                            family: 'Gaegu',
+                            size: 12
+                        },
+                        color: '#5e503f'
+                    },
+                    grid: {
+                        color: 'rgba(94, 80, 63, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            family: 'Gaegu',
+                            size: 12
+                        },
+                        color: '#5e503f'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    titleFont: {
+                        family: 'Gaegu'
+                    },
+                    bodyFont: {
+                        family: 'Gaegu'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Initial rendering of history on script load
+renderHistory();

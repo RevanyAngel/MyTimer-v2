@@ -462,6 +462,105 @@ h1 {
     transform: scale(1.2);
 }
 
+/* Category Selection Dropdown */
+.category-select {
+    font-family: 'Gaegu', cursive;
+    font-size: 0.9rem;
+    border: 2px solid var(--accent-brown);
+    border-radius: 6px;
+    padding: 2px 4px;
+    background: #fff;
+    color: var(--accent-brown);
+    outline: none;
+    cursor: pointer;
+    margin-right: 10px;
+    max-width: 100px;
+}
+
+/* Main Report Button */
+.btn-report-main {
+    font-family: 'Gaegu', cursive;
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 6px 20px;
+    border: 3px solid var(--accent-brown);
+    border-radius: 50px;
+    background: var(--accent-pink);
+    color: var(--accent-brown);
+    cursor: pointer;
+    transition: all 0.1s ease;
+    margin-top: 15px;
+    margin-bottom: 0px;
+    display: inline-block;
+    box-shadow: 4px 4px 0px var(--accent-brown);
+    outline: none;
+}
+
+.btn-report-main:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--accent-brown);
+}
+
+.btn-report-main.active {
+    background: var(--accent-brown);
+    color: #fff;
+    box-shadow: none;
+    transform: none;
+}
+
+/* --- REPORT MODE STYLING --- */
+.report-controls {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 2px dashed var(--accent-brown);
+    padding-bottom: 15px;
+}
+
+.btn-filter {
+    font-family: 'Gaegu', cursive;
+    font-size: 1rem;
+    padding: 4px 10px;
+    border: 2px solid var(--accent-brown);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--accent-brown);
+    cursor: pointer;
+    transition: all 0.1s;
+    font-weight: bold;
+    text-transform: none;
+    box-shadow: 2px 2px 0px var(--accent-brown);
+}
+
+.btn-filter:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px var(--accent-brown);
+}
+
+.btn-filter.active {
+    background: var(--accent-brown);
+    color: #fff;
+    box-shadow: none;
+    transform: none;
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    max-height: 250px;
+    margin: 10px auto;
+}
+
+.report-empty {
+    font-family: 'Gaegu', cursive;
+    font-size: 1.2rem;
+    color: #888;
+    margin: 30px 0;
+    text-align: center;
+}
+
+
 #tampilanWaktu {
     font-family: 'VT323', monospace;
     font-size: 5rem;

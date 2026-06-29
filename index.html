@@ -60,11 +60,6 @@
                             <button class="btn-small btn-reset" onclick="resetTimer()">Reset</button>
                         </div>
                     </div>
-                    <div class="history-container" id="pomoHistoryContainer" style="display: none;">
-                        <h3 class="history-title">History</h3>
-                        <ul id="pomoHistoryList" class="history-list"></ul>
-                    </div>
-                    <h3>Total Focus: <span id="totalWaktu">0</span> min</h3>
                 </div>
 
                 <!-- === STOPWATCH MODE === -->
@@ -86,10 +81,7 @@
                         <ul id="lapsList" class="laps-list"></ul>
                     </div>
 
-                    <div class="history-container" id="historyContainer" style="display: none;">
-                        <h3 class="history-title">History</h3>
-                        <ul id="historyList" class="history-list"></ul>
-                    </div>
+
                 </div>
 
                 <!-- === REPORT MODE === -->
@@ -108,6 +100,26 @@
                     <div id="reportEmptyMessage" class="report-empty" style="display: none;">
                         No history data found for this period.
                     </div>
+
+                    <div id="reportTotalsContainer" class="report-totals-container" style="display: none;">
+                        <!-- Category totals will be injected here -->
+                    </div>
+
+                    <div class="history-container" id="reportHistoryContainer" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h3 class="history-title" style="margin: 0;">History Details</h3>
+                            <span id="dayTotalTimeDisplay" class="history-date-total" style="display: none;"></span>
+                        </div>
+                        <div id="reportHistoryList" class="report-history-list"></div>
+                    </div>
+                </div>
+
+                <div class="history-container" id="frontHistoryContainer" style="display: none; border-top: 2px dashed var(--accent-brown); padding-top: 15px; margin-top: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h3 class="history-title" style="margin: 0;">Today's History</h3>
+                        <span id="frontTotalTimeDisplay" class="history-date-total" style="display: none;"></span>
+                    </div>
+                    <ul id="frontHistoryList" class="history-list"></ul>
                 </div>
 
                 <button id="btnReport" class="btn-report-main" onclick="switchMode('report')">Report</button>

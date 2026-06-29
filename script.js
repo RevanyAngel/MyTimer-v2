@@ -2,7 +2,6 @@
 let elemenTampilan = document.getElementById("tampilanWaktu");
 let waktuMenit = document.getElementById("menit");
 let waktuDetik = document.getElementById("detik");
-let hitungMenit = document.getElementById("totalWaktu");
 let btnMain = document.getElementById("btnMain");
 
 // Input Settings
@@ -94,7 +93,6 @@ function finishTimer() {
     
     if(currentMode === "WORK") {
         totalMenitFokus += currentSessionDuration; 
-        hitungMenit.textContent = totalMenitFokus; 
         addHistory(currentSessionDuration * 60 * 1000);
     }
     
@@ -253,11 +251,16 @@ let lapsContainer = document.getElementById("lapsContainer");
 let stopwatchHistory = JSON.parse(localStorage.getItem("stopwatchHistory")) || [];
 let customCategories = JSON.parse(localStorage.getItem("customCategories")) || ["Work", "Study", "Coding", "Exercise"];
 let historyList = document.getElementById("historyList");
-let historyContainer = document.getElementById("historyContainer");
-let pomoHistoryList = document.getElementById("pomoHistoryList");
-let pomoHistoryContainer = document.getElementById("pomoHistoryContainer");
+let reportHistoryList = document.getElementById("reportHistoryList");
+let reportHistoryContainer = document.getElementById("reportHistoryContainer");
+let reportTotalsContainer = document.getElementById("reportTotalsContainer");
 let reportChartInstance = null;
 let currentReportFilter = "day";
+let selectedCategoryFilter = null;
+
+let frontHistoryContainer = document.getElementById("frontHistoryContainer");
+let frontHistoryList = document.getElementById("frontHistoryList");
+let frontTotalTimeDisplay = document.getElementById("frontTotalTimeDisplay");
 
 function switchMode(mode) {
     currentAppMode = mode;
@@ -275,16 +278,20 @@ function switchMode(mode) {
     pomodoroDiv.style.display = "none";
     stopwatchDiv.style.display = "none";
     reportDiv.style.display = "none";
+    frontHistoryContainer.style.display = "none";
 
     if (mode === "pomodoro") {
         btnPomo.classList.add("active");
         pomodoroDiv.style.display = "block";
+        frontHistoryContainer.style.display = "block";
         restartStopwatch();
+        renderFrontHistory();
     } else if (mode === "stopwatch") {
         btnSw.classList.add("active");
         stopwatchDiv.style.display = "block";
+        frontHistoryContainer.style.display = "block";
         resetTimer();
-        renderHistory();
+        renderFrontHistory();
     } else if (mode === "report") {
         btnRep.classList.add("active");
         reportDiv.style.display = "block";
@@ -426,13 +433,15 @@ function addHistory(ms) {
     };
     stopwatchHistory.push(entry);
     localStorage.setItem("stopwatchHistory", JSON.stringify(stopwatchHistory));
-    renderHistory();
+    if (currentAppMode === "report") initReport();
+    renderFrontHistory();
 }
 
 function deleteHistory(id) {
     stopwatchHistory = stopwatchHistory.filter(item => item.id !== id);
     localStorage.setItem("stopwatchHistory", JSON.stringify(stopwatchHistory));
-    renderHistory();
+    if (currentAppMode === "report") initReport();
+    renderFrontHistory();
 }
 
 function updateHistoryCategory(id, selectElement) {
@@ -458,57 +467,16 @@ function updateHistoryCategory(id, selectElement) {
         item.category = newCategory;
         localStorage.setItem("stopwatchHistory", JSON.stringify(stopwatchHistory));
     }
-    renderHistory();
+    if (currentAppMode === "report") initReport();
+    renderFrontHistory();
 }
 
-function renderHistory() {
-    renderHistoryForList(historyList, historyContainer);
-    renderHistoryForList(pomoHistoryList, pomoHistoryContainer);
-}
 
-function renderHistoryForList(listElement, containerElement) {
-    if (!listElement || !containerElement) return;
-    
-    listElement.innerHTML = "";
-    if (stopwatchHistory.length === 0) {
-        containerElement.style.display = "none";
-        return;
-    }
-
-    for (let i = stopwatchHistory.length - 1; i >= 0; i--) {
-        let item = stopwatchHistory[i];
-        let ms = typeof item === 'object' ? item.ms : item;
-        let id = typeof item === 'object' ? item.id : i;
-        let currentCat = typeof item === 'object' ? item.category : "Uncategorized";
-        
-        let historyNumber = i + 1;
-        let li = document.createElement("li");
-        li.className = "history-item";
-        
-        let optionsHtml = `<option value="Uncategorized" ${currentCat === 'Uncategorized' ? 'selected' : ''}>Uncategorized</option>`;
-        customCategories.forEach(cat => {
-            if (cat !== "Uncategorized") {
-                optionsHtml += `<option value="${cat}" ${currentCat === cat ? 'selected' : ''}>${cat}</option>`;
-            }
-        });
-        optionsHtml += `<option value="__add_new__">+ Add New...</option>`;
-
-        li.innerHTML = `
-            <span class="history-number">${historyNumber}</span>
-            <span class="history-time">${formatMsToTime(ms)}</span>
-            <select class="category-select" onchange="updateHistoryCategory('${id}', this)">
-                ${optionsHtml}
-            </select>
-            <button class="btn-delete-history" onclick="deleteHistory('${id}')">x</button>
-        `;
-        listElement.appendChild(li);
-    }
-    containerElement.style.display = "block";
-}
 
 // --- REPORT FUNCTIONS ---
 function filterReport(period) {
     currentReportFilter = period;
+    selectedCategoryFilter = null;
     document.querySelectorAll(".btn-filter").forEach(btn => {
         btn.classList.remove("active");
     });
@@ -516,23 +484,37 @@ function filterReport(period) {
     initReport();
 }
 
+function toggleCategoryFilter(category) {
+    if (selectedCategoryFilter === category) {
+        selectedCategoryFilter = null;
+    } else {
+        selectedCategoryFilter = category;
+    }
+    initReport();
+}
+
 function initReport() {
-    let now = Date.now();
-    let limitMs = 0;
+    let now = new Date();
+    let startBoundary = new Date(now);
     
     if (currentReportFilter === "day") {
-        limitMs = 24 * 60 * 60 * 1000;
+        startBoundary.setHours(0, 0, 0, 0);
     } else if (currentReportFilter === "week") {
-        limitMs = 7 * 24 * 60 * 60 * 1000;
+        let day = now.getDay();
+        let diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday
+        startBoundary.setDate(diff);
+        startBoundary.setHours(0, 0, 0, 0);
     } else if (currentReportFilter === "month") {
-        limitMs = 30 * 24 * 60 * 60 * 1000;
+        startBoundary.setDate(1);
+        startBoundary.setHours(0, 0, 0, 0);
     } else if (currentReportFilter === "year") {
-        limitMs = 365 * 24 * 60 * 60 * 1000;
+        startBoundary.setMonth(0, 1);
+        startBoundary.setHours(0, 0, 0, 0);
     }
     
     let filteredHistory = stopwatchHistory.filter(item => {
-        let ts = item.timestamp || now;
-        return (now - ts) <= limitMs;
+        let ts = item.timestamp || now.getTime();
+        return ts >= startBoundary.getTime();
     });
     
     let categorySums = {};
@@ -543,12 +525,47 @@ function initReport() {
     });
     
     let labels = Object.keys(categorySums);
-    let dataPoints = labels.map(cat => Math.round((categorySums[cat] / 60000) * 100) / 100);
+
+    // Update Totals UI
+    reportTotalsContainer.innerHTML = "";
+    if (labels.length > 0) {
+        labels.forEach(cat => {
+            let mins = Math.round((categorySums[cat] / 60000) * 10) / 10;
+            let tag = document.createElement("div");
+            tag.className = "total-tag" + (selectedCategoryFilter === cat ? " active" : "");
+            tag.innerHTML = `<strong>${cat}</strong>: ${mins} min`;
+            tag.onclick = () => toggleCategoryFilter(cat);
+            reportTotalsContainer.appendChild(tag);
+        });
+        reportTotalsContainer.style.display = "flex";
+    } else {
+        reportTotalsContainer.style.display = "none";
+    }
+
+    // Filter history for chart and list if category selected
+    let displayHistory = filteredHistory;
+    if (selectedCategoryFilter) {
+        displayHistory = filteredHistory.filter(item => (item.category || "Uncategorized") === selectedCategoryFilter);
+    }
+
+    // Chart logic
+    let chartCategorySums = {};
+    displayHistory.forEach(item => {
+        let cat = item.category || "Uncategorized";
+        let ms = item.ms || 0;
+        chartCategorySums[cat] = (chartCategorySums[cat] || 0) + ms;
+    });
+    
+    let chartLabels = Object.keys(chartCategorySums);
+    let dataPoints = chartLabels.map(cat => Math.round((chartCategorySums[cat] / 60000) * 100) / 100);
+
+    // Render History UI
+    renderReportHistory(displayHistory);
 
     let chartCanvas = document.getElementById("reportChart");
     let emptyMessage = document.getElementById("reportEmptyMessage");
     
-    if (labels.length === 0) {
+    if (chartLabels.length === 0) {
         chartCanvas.style.display = "none";
         emptyMessage.style.display = "block";
         if (reportChartInstance) {
@@ -642,5 +659,159 @@ function initReport() {
     });
 }
 
-// Initial rendering of history on script load
-renderHistory();
+function renderReportHistory(filteredHistory) {
+    reportHistoryList.innerHTML = "";
+    let dayTotalTimeDisplay = document.getElementById("dayTotalTimeDisplay");
+    
+    if (filteredHistory.length === 0) {
+        reportHistoryContainer.style.display = "none";
+        return;
+    }
+    
+    // Sort descending
+    filteredHistory.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    
+    // Pre-calculate daily totals
+    let dailyTotals = {};
+    let totalMsForAll = 0;
+    filteredHistory.forEach(item => {
+        let dateObj = new Date(item.timestamp || Date.now());
+        let dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        dailyTotals[dateStr] = (dailyTotals[dateStr] || 0) + (item.ms || 0);
+        totalMsForAll += (item.ms || 0);
+    });
+
+    if (currentReportFilter === "day") {
+        dayTotalTimeDisplay.textContent = `Total: ${formatMsToTime(totalMsForAll)}`;
+        dayTotalTimeDisplay.style.display = "inline-block";
+    } else {
+        dayTotalTimeDisplay.style.display = "none";
+    }
+
+    let currentGroupDate = null;
+    let groupUl = null;
+    let groupDiv = null;
+
+    filteredHistory.forEach((item) => {
+        let dateObj = new Date(item.timestamp || Date.now());
+        let dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        
+        if (dateStr !== currentGroupDate) {
+            // Add separator for previous group if not first
+            if (currentGroupDate !== null) {
+                let hr = document.createElement("hr");
+                hr.className = "history-separator";
+                groupDiv.appendChild(hr);
+            }
+            
+            currentGroupDate = dateStr;
+            groupDiv = document.createElement("div");
+            groupDiv.className = "history-date-group";
+            
+            if (currentReportFilter !== "day") {
+                let header = document.createElement("div");
+                header.className = "history-date-header";
+                
+                let dateSpan = document.createElement("span");
+                dateSpan.textContent = dateStr;
+                
+                let totalSpan = document.createElement("span");
+                totalSpan.className = "history-date-total";
+                totalSpan.textContent = formatMsToTime(dailyTotals[dateStr]);
+                
+                header.appendChild(dateSpan);
+                header.appendChild(totalSpan);
+                groupDiv.appendChild(header);
+            }
+            
+            groupUl = document.createElement("ul");
+            groupUl.className = "history-list";
+            groupDiv.appendChild(groupUl);
+            reportHistoryList.appendChild(groupDiv);
+        }
+        
+        let ms = item.ms || 0;
+        let id = item.id;
+        let currentCat = item.category || "Uncategorized";
+        
+        let li = document.createElement("li");
+        li.className = "history-item";
+        
+        let optionsHtml = `<option value="Uncategorized" ${currentCat === 'Uncategorized' ? 'selected' : ''}>Uncategorized</option>`;
+        customCategories.forEach(cat => {
+            if (cat !== "Uncategorized") {
+                optionsHtml += `<option value="${cat}" ${currentCat === cat ? 'selected' : ''}>${cat}</option>`;
+            }
+        });
+        optionsHtml += `<option value="__add_new__">+ Add New...</option>`;
+
+        li.innerHTML = `
+            <span class="history-time" style="margin-left: 5px;">${formatMsToTime(ms)}</span>
+            <select class="category-select" onchange="updateHistoryCategory('${id}', this)">
+                ${optionsHtml}
+            </select>
+            <button class="btn-delete-history" onclick="deleteHistory('${id}')">x</button>
+        `;
+        groupUl.appendChild(li);
+    });
+    
+    reportHistoryContainer.style.display = "block";
+}
+
+function renderFrontHistory() {
+    if (!frontHistoryList) return;
+    frontHistoryList.innerHTML = "";
+    
+    let now = new Date();
+    let startBoundary = new Date(now);
+    startBoundary.setHours(0, 0, 0, 0);
+    
+    let todayHistory = stopwatchHistory.filter(item => {
+        let ts = item.timestamp || now.getTime();
+        return ts >= startBoundary.getTime();
+    });
+    
+    if (todayHistory.length === 0 || currentAppMode === "report") {
+        frontHistoryContainer.style.display = "none";
+        return;
+    }
+    
+    // Sort descending
+    todayHistory.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    
+    let totalMsForAll = 0;
+    
+    todayHistory.forEach(item => {
+        let ms = item.ms || 0;
+        let id = item.id;
+        let currentCat = item.category || "Uncategorized";
+        totalMsForAll += ms;
+        
+        let li = document.createElement("li");
+        li.className = "history-item";
+        
+        let optionsHtml = `<option value="Uncategorized" ${currentCat === 'Uncategorized' ? 'selected' : ''}>Uncategorized</option>`;
+        customCategories.forEach(cat => {
+            if (cat !== "Uncategorized") {
+                optionsHtml += `<option value="${cat}" ${currentCat === cat ? 'selected' : ''}>${cat}</option>`;
+            }
+        });
+        optionsHtml += `<option value="__add_new__">+ Add New...</option>`;
+
+        li.innerHTML = `
+            <span class="history-time" style="margin-left: 5px;">${formatMsToTime(ms)}</span>
+            <select class="category-select" onchange="updateHistoryCategory('${id}', this)">
+                ${optionsHtml}
+            </select>
+            <button class="btn-delete-history" onclick="deleteHistory('${id}')">x</button>
+        `;
+        frontHistoryList.appendChild(li);
+    });
+    
+    frontTotalTimeDisplay.textContent = `Total: ${formatMsToTime(totalMsForAll)}`;
+    frontTotalTimeDisplay.style.display = "inline-block";
+    frontHistoryContainer.style.display = "block";
+}
+
+// Render history di halaman depan saat pertama kali diload
+renderFrontHistory();

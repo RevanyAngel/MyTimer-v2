@@ -827,6 +827,100 @@ li:hover .btn-delete {
     transform: scale(1.2);
 }
 
+/* --- REPORT TOTALS & HISTORY --- */
+.report-totals-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px dashed var(--accent-brown);
+}
+
+.total-tag {
+    background-color: #fff;
+    color: var(--accent-brown);
+    font-family: 'VT323', monospace;
+    font-size: 1.1rem;
+    padding: 5px 12px;
+    border-radius: 15px;
+    border: 2px solid var(--accent-brown);
+    box-shadow: 2px 2px 0px var(--accent-brown);
+    cursor: pointer;
+    transition: all 0.1s ease;
+    user-select: none;
+}
+
+.total-tag:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px var(--accent-brown);
+}
+
+.total-tag.active {
+    background-color: var(--accent-brown);
+    color: #fff;
+    box-shadow: none;
+    transform: none;
+}
+
+.report-history-list {
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.report-history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.report-history-list::-webkit-scrollbar-track {
+    background: #f4f1ea;
+    border-radius: 3px;
+}
+
+.report-history-list::-webkit-scrollbar-thumb {
+    background: var(--accent-brown);
+    border-radius: 3px;
+}
+
+.history-date-group {
+    margin-bottom: 15px;
+}
+
+.history-date-header {
+    font-family: 'Gaegu', cursive;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--accent-brown);
+    margin-bottom: 8px;
+    text-align: left;
+    padding-left: 5px;
+    padding-right: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.history-date-total {
+    font-family: 'VT323', monospace;
+    font-size: 1.1rem;
+    color: var(--accent-brown);
+    background-color: rgba(94, 80, 63, 0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.history-separator {
+    border: none;
+    border-top: 2px solid rgba(94, 80, 63, 0.2);
+    margin: 15px 0 5px 0;
+}
+
+.report-history-list ul {
+    min-height: auto;
+}
+
 @media (max-width: 950px) {
     .main-container {
         flex-direction: column;
@@ -837,6 +931,8 @@ li:hover .btn-delete {
         order: 1;
         width: 100%;
         max-width: 320px;
+        padding: 20px;
+        box-sizing: border-box;
     }
 
     .todo-card {
@@ -844,6 +940,7 @@ li:hover .btn-delete {
         width: 100%;
         max-width: 320px;
         transform: rotate(0deg);
+        box-sizing: border-box;
     }
 
     .distraction-card {
@@ -851,5 +948,23 @@ li:hover .btn-delete {
         width: 100%;
         max-width: 320px;
         transform: rotate(0deg);
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 400px) {
+    .history-date-header, 
+    #frontHistoryContainer > div:first-child {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 5px;
+    }
+
+    .history-item {
+        flex-wrap: wrap;
+    }
+    
+    .history-time {
+        margin-bottom: 5px;
     }
 }

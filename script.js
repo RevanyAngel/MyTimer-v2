@@ -248,6 +248,11 @@ let laps = [];
 let lapsList = document.getElementById("lapsList");
 let lapsContainer = document.getElementById("lapsContainer");
 
+// History variables
+let stopwatchHistory = [];
+let historyList = document.getElementById("historyList");
+let historyContainer = document.getElementById("historyContainer");
+
 function switchMode(mode) {
     currentAppMode = mode;
     let btnPomo = document.getElementById("btnPomodoro");
@@ -332,6 +337,11 @@ function updateStopwatch() {
 }
 
 function restartStopwatch() {
+    let currentMs = getCurrentStopwatchMs();
+    if (currentMs > 0) {
+        addHistory(currentMs);
+    }
+
     if (swInterval) clearInterval(swInterval);
     swInterval = null;
     swElapsed = 0;
@@ -389,4 +399,35 @@ function clearLaps() {
     laps = [];
     if (lapsList) lapsList.innerHTML = "";
     if (lapsContainer) lapsContainer.style.display = "none";
+}
+
+// --- HISTORY FUNCTIONS ---
+function addHistory(ms) {
+    stopwatchHistory.push(ms);
+    renderHistory();
+}
+
+function deleteHistory(index) {
+    stopwatchHistory.splice(index, 1);
+    renderHistory();
+}
+
+function renderHistory() {
+    if (!historyList || !historyContainer) return;
+    
+    historyList.innerHTML = "";
+    if (stopwatchHistory.length === 0) {
+        historyContainer.style.display = "none";
+        return;
+    }
+
+    for (let i = stopwatchHistory.length - 1; i >= 0; i--) {
+        let ms = stopwatchHistory[i];
+        let historyNumber = i + 1;
+        let li = document.createElement("li");
+        li.className = "history-item";
+        li.innerHTML = `<span class="history-number">${historyNumber}</span><span class="history-time">${formatMsToTime(ms)}</span><button class="btn-delete-history" onclick="deleteHistory(${i})">x</button>`;
+        historyList.appendChild(li);
+    }
+    historyContainer.style.display = "block";
 }

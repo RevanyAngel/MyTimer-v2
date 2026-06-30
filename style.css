@@ -437,6 +437,92 @@ h1 {
     flex-shrink: 0;
 }
 
+.custom-select-wrapper {
+    position: relative;
+    font-family: 'Gaegu', cursive;
+    font-size: 0.9rem;
+    margin-right: 10px;
+    flex: 1;
+    max-width: 120px;
+}
+
+.custom-select-display {
+    border: 2px solid var(--accent-brown);
+    border-radius: 6px;
+    padding: 2px 8px;
+    background: #fff;
+    color: var(--accent-brown);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    min-width: 150px;
+    background: #fff;
+    border: 2px solid var(--accent-brown);
+    border-radius: 6px;
+    box-shadow: 2px 2px 0px var(--accent-brown);
+    z-index: 100;
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.custom-select-options li {
+    padding: 6px 8px;
+    margin: 0;
+    border-bottom: 1px dashed var(--accent-brown);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.custom-select-options li:last-child {
+    border-bottom: none;
+}
+
+.custom-select-options li:hover {
+    background: rgba(202, 233, 255, 0.45);
+}
+
+.btn-delete-cat {
+    color: #ff6b6b;
+    font-family: 'Gaegu';
+    font-weight: bold;
+    padding: 0 4px;
+    border-radius: 4px;
+    transition: all 0.1s;
+}
+
+.btn-delete-cat:hover {
+    background: #ffe599;
+    transform: scale(1.1);
+}
+
+.add-new-cat {
+    font-weight: bold;
+    color: var(--accent-brown);
+    background-color: var(--accent-blue);
+}
+
+.add-new-cat:hover {
+    background-color: var(--accent-blue) !important;
+    opacity: 0.8;
+}
+
 .history-time {
     font-family: 'VT323', monospace;
     font-size: 1.1rem;
@@ -531,6 +617,20 @@ h1 {
     font-weight: bold;
     text-transform: none;
     box-shadow: 2px 2px 0px var(--accent-brown);
+}
+
+.month-select {
+    background-color: #fff;
+    color: var(--accent-brown);
+    border: 2px solid var(--accent-brown);
+    border-radius: 12px;
+    padding: 4px 10px;
+    font-family: 'Gaegu', cursive;
+    font-weight: bold;
+    font-size: 1rem;
+    box-shadow: 2px 2px 0px var(--accent-brown);
+    cursor: pointer;
+    outline: none;
 }
 
 .btn-filter:active {
@@ -862,6 +962,22 @@ li:hover .btn-delete {
     color: #fff;
     box-shadow: none;
     transform: none;
+}
+
+.btn-delete-tag {
+    color: #ff6b6b;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 8px;
+    font-family: 'Gaegu';
+    opacity: 0.6;
+    transition: all 0.1s;
+    display: inline-block;
+}
+
+.btn-delete-tag:hover {
+    opacity: 1;
+    transform: scale(1.2);
 }
 
 .report-history-list {

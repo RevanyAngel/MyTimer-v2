@@ -86,14 +86,31 @@
 
                 <!-- === REPORT MODE === -->
                 <div id="reportMode" style="display: none;">
-                    <div class="report-controls">
+                    <div class="filter-group">
                         <button class="btn-filter active" onclick="filterReport('day')">Day</button>
                         <button class="btn-filter" onclick="filterReport('week')">Week</button>
                         <button class="btn-filter" onclick="filterReport('month')">Month</button>
                         <button class="btn-filter" onclick="filterReport('year')">Year</button>
                     </div>
 
-                    <div class="chart-wrapper">
+                    <div id="monthSelectorContainer" style="display: none; text-align: center; margin-top: 10px; margin-bottom: 10px;">
+                        <select id="monthSelector" class="month-select" onchange="initReport()">
+                            <option value="0">January</option>
+                            <option value="1">February</option>
+                            <option value="2">March</option>
+                            <option value="3">April</option>
+                            <option value="4">May</option>
+                            <option value="5">June</option>
+                            <option value="6">July</option>
+                            <option value="7">August</option>
+                            <option value="8">September</option>
+                            <option value="9">October</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
+                    </div>
+
+                    <div class="chart-container">
                         <canvas id="reportChart"></canvas>
                     </div>
 

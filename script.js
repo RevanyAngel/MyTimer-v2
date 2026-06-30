@@ -11,26 +11,26 @@ let inputVolume = document.getElementById("inputVolume"); // Slider Volume
 
 let refTampilan = null;
 let beepBerulang = null;
-let totalMenitFokus = 0; 
+let totalMenitFokus = 0;
 
 let targetWaktu = 0;
 let sisaWaktuSimpan = 0;
 let pesanGlobal = "";
 let isPaused = false;
-let isRunning = false; 
-let isRinging = false; 
-let currentMode = "WORK"; 
+let isRunning = false;
+let isRinging = false;
+let currentMode = "WORK";
 
-let currentSessionDuration = 0; 
+let currentSessionDuration = 0;
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-if(Notification.permission !== "granted"){ Notification.requestPermission(); }
+if (Notification.permission !== "granted") { Notification.requestPermission(); }
 
 // --- FUNGSI AUDIO (UPDATED) ---
-function beep(){
+function beep() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    
+
     // Ambil nilai volume dari slider (0 - 100) lalu bagi 100 agar jadi 0.0 - 1.0
     let volumeLevel = inputVolume.value / 100;
 
@@ -49,14 +49,14 @@ function beep(){
 }
 
 // Event listener agar audio context aktif saat user geser volume
-inputVolume.addEventListener('input', function() {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+inputVolume.addEventListener('input', function () {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 });
 
 function actionMainButton() {
     if (isRinging) { resetTimer(); return; }
-    if (!isRunning && !isPaused) { timer_Work(); } 
-    else if (isRunning) { togglePause(); } 
+    if (!isRunning && !isPaused) { timer_Work(); }
+    else if (isRunning) { togglePause(); }
     else if (isPaused) { togglePause(); }
 }
 
@@ -76,10 +76,10 @@ function updateButtonUI() {
     }
 }
 
-function updateTampilan(){
+function updateTampilan() {
     const sisaWaktuMs = targetWaktu - Date.now();
     sisaWaktuSimpan = sisaWaktuMs;
-    if(sisaWaktuMs <= 0){ finishTimer(); return; }
+    if (sisaWaktuMs <= 0) { finishTimer(); return; }
     const sisaMenit = Math.floor(sisaWaktuMs / 60000);
     const sisaDetik = Math.floor((sisaWaktuMs % 60000) / 1000);
     waktuMenit.textContent = (sisaMenit < 10 ? "0" : "") + sisaMenit;
@@ -87,78 +87,78 @@ function updateTampilan(){
 }
 
 function finishTimer() {
-    stopTimer(); 
+    stopTimer();
     waktuMenit.textContent = "00"; waktuDetik.textContent = "00";
-    isRunning = false; isPaused = false; isRinging = true; 
-    
-    if(currentMode === "WORK") {
-        totalMenitFokus += currentSessionDuration; 
+    isRunning = false; isPaused = false; isRinging = true;
+
+    if (currentMode === "WORK") {
+        totalMenitFokus += currentSessionDuration;
         addHistory(currentSessionDuration * 60 * 1000);
     }
-    
-    if(Notification.permission === "granted"){ new Notification("Time is Up!", { body: pesanGlobal }); }
-    beep(); 
+
+    if (Notification.permission === "granted") { new Notification("Time is Up!", { body: pesanGlobal }); }
+    beep();
     beepBerulang = setInterval(beep, 1000);
-    updateButtonUI(); 
+    updateButtonUI();
 }
 
-function mulaiTimer(menit, detik, pesan, mode){
-    stopTimer(); 
+function mulaiTimer(menit, detik, pesan, mode) {
+    stopTimer();
     if (audioCtx.state === 'suspended') audioCtx.resume();
     elemenTampilan.innerHTML = `<span id="menit"></span>:<span id="detik"></span>`;
-    waktuMenit = document.getElementById("menit"); waktuDetik = document.getElementById("detik");  
-    
-    pesanGlobal = pesan; 
+    waktuMenit = document.getElementById("menit"); waktuDetik = document.getElementById("detik");
+
+    pesanGlobal = pesan;
     currentMode = mode;
-    
-    if(mode === "WORK") {
+
+    if (mode === "WORK") {
         currentSessionDuration = menit;
     }
 
     sisaWaktuSimpan = (menit * 60 * 1000) + (detik * 1000) + 999;
-    isRunning = true; isPaused = false; isRinging = false; 
-    jalankanInterval(); updateButtonUI(); 
+    isRunning = true; isPaused = false; isRinging = false;
+    jalankanInterval(); updateButtonUI();
 }
 
-function jalankanInterval(){
+function jalankanInterval() {
     targetWaktu = Date.now() + sisaWaktuSimpan;
     updateTampilan(); refTampilan = setInterval(updateTampilan, 1000);
 }
 
-function togglePause(){
-    if(!isRunning && !isPaused) return; 
-    if(isPaused){ isPaused = false; isRunning = true; jalankanInterval(); } 
-    else { isPaused = true; isRunning = false; if(refTampilan) clearInterval(refTampilan); refTampilan = null; }
-    updateButtonUI(); 
-}
-
-function stopTimer(){
-    if(refTampilan) clearInterval(refTampilan);
-    if(beepBerulang) clearInterval(beepBerulang);
-    refTampilan = null; beepBerulang = null;
-}
-
-function resetTimer(){
-    stopTimer(); 
-    isRunning = false; isPaused = false; isRinging = false; 
-    
-    let workVal = parseInt(inputWorkTime.value) || 25;
-    waktuMenit.textContent = (workVal < 10 ? "0" : "") + workVal;
-    waktuDetik.textContent = "00";
-    
+function togglePause() {
+    if (!isRunning && !isPaused) return;
+    if (isPaused) { isPaused = false; isRunning = true; jalankanInterval(); }
+    else { isPaused = true; isRunning = false; if (refTampilan) clearInterval(refTampilan); refTampilan = null; }
     updateButtonUI();
 }
 
-function timer_Work(){ 
-    let duration = parseInt(inputWorkTime.value);
-    if(!duration || duration < 1) duration = 25;
-    mulaiTimer(duration, 0, "Time to rest!", "WORK"); 
+function stopTimer() {
+    if (refTampilan) clearInterval(refTampilan);
+    if (beepBerulang) clearInterval(beepBerulang);
+    refTampilan = null; beepBerulang = null;
 }
 
-function timer_Rest(){ 
+function resetTimer() {
+    stopTimer();
+    isRunning = false; isPaused = false; isRinging = false;
+
+    let workVal = parseInt(inputWorkTime.value) || 25;
+    waktuMenit.textContent = (workVal < 10 ? "0" : "") + workVal;
+    waktuDetik.textContent = "00";
+
+    updateButtonUI();
+}
+
+function timer_Work() {
+    let duration = parseInt(inputWorkTime.value);
+    if (!duration || duration < 1) duration = 25;
+    mulaiTimer(duration, 0, "Time to rest!", "WORK");
+}
+
+function timer_Rest() {
     let duration = parseInt(inputRestTime.value);
-    if(!duration || duration < 1) duration = 5;
-    mulaiTimer(duration, 0, "Back to work!", "REST"); 
+    if (!duration || duration < 1) duration = 5;
+    mulaiTimer(duration, 0, "Back to work!", "REST");
 }
 
 // --- DRAG AND DROP ---
@@ -170,10 +170,10 @@ function attachDragEvents(li) {
 
 document.querySelectorAll('.draggable-container').forEach(container => {
     container.addEventListener('dragover', e => {
-        e.preventDefault(); 
+        e.preventDefault();
         const afterElement = getDragAfterElement(container, e.clientY);
         const draggable = document.querySelector('.dragging');
-        if (afterElement == null) { container.appendChild(draggable); } 
+        if (afterElement == null) { container.appendChild(draggable); }
         else { container.insertBefore(draggable, afterElement); }
     });
 });
@@ -183,7 +183,7 @@ function getDragAfterElement(container, y) {
     return draggableElements.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
-        if (offset < 0 && offset > closest.offset) { return { offset: offset, element: child }; } 
+        if (offset < 0 && offset > closest.offset) { return { offset: offset, element: child }; }
         else { return closest; }
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
@@ -191,9 +191,9 @@ function getDragAfterElement(container, y) {
 // --- LIST LOGIC ---
 let distractionInput = document.getElementById("inputDistraction");
 let distractionList = document.getElementById("listDistraction");
-distractionInput.addEventListener("keypress", function(event) { if (event.key === "Enter") { addDistraction(); } });
+distractionInput.addEventListener("keypress", function (event) { if (event.key === "Enter") { addDistraction(); } });
 function addDistraction() {
-    let text = distractionInput.value.trim(); if(text === "") return;
+    let text = distractionInput.value.trim(); if (text === "") return;
     let li = document.createElement("li");
     li.innerHTML = `<span>${text}</span><button class="btn-delete" onclick="this.parentElement.remove()">x</button>`;
     attachDragEvents(li); distractionList.appendChild(li); distractionInput.value = "";
@@ -201,9 +201,9 @@ function addDistraction() {
 
 let todoInput = document.getElementById("inputTodo");
 let todoList = document.getElementById("listTodo");
-todoInput.addEventListener("keypress", function(event) { if (event.key === "Enter") { addTodo(); } });
+todoInput.addEventListener("keypress", function (event) { if (event.key === "Enter") { addTodo(); } });
 function addTodo() {
-    let text = todoInput.value.trim(); if(text === "") return;
+    let text = todoInput.value.trim(); if (text === "") return;
     let li = document.createElement("li"); li.className = "todo-item";
     li.innerHTML = `<input type="checkbox" onchange="toggleTodo(this)"><span class="todo-text" onclick="clickText(this)">${text}</span><button class="btn-delete" onclick="this.parentElement.remove()">x</button>`;
     attachDragEvents(li); todoList.appendChild(li); todoInput.value = "";
@@ -211,7 +211,7 @@ function addTodo() {
 
 function toggleTodo(checkbox) {
     let li = checkbox.parentElement; let ul = li.parentElement;
-    if(checkbox.checked) {
+    if (checkbox.checked) {
         li.classList.add("completed"); li.classList.add("moving");
         setTimeout(() => { ul.appendChild(li); li.classList.remove("moving"); }, 300);
     } else {
@@ -461,7 +461,7 @@ function updateHistoryCategory(id, selectElement) {
             return;
         }
     }
-    
+
     let item = stopwatchHistory.find(item => item.id === id);
     if (item) {
         item.category = newCategory;
@@ -473,6 +473,95 @@ function updateHistoryCategory(id, selectElement) {
 
 
 
+function deleteCustomCategoryEvent(event, name) {
+    event.stopPropagation();
+    if (confirm("Are you sure you want to delete the category '" + name + "'? All history items using this category will become Uncategorized.")) {
+        customCategories = customCategories.filter(c => c !== name);
+        localStorage.setItem("customCategories", JSON.stringify(customCategories));
+        
+        stopwatchHistory.forEach(item => {
+            if (item.category === name) item.category = "Uncategorized";
+        });
+        localStorage.setItem("stopwatchHistory", JSON.stringify(stopwatchHistory));
+        
+        if (selectedCategoryFilter === name) {
+            selectedCategoryFilter = null;
+        }
+        
+        if (currentAppMode === "report") initReport();
+        renderFrontHistory();
+    }
+}
+
+function toggleCustomSelect(event, wrapper) {
+    event.stopPropagation();
+    let options = wrapper.querySelector(".custom-select-options");
+    let isCurrentlyOpen = options.style.display === "block";
+    
+    document.querySelectorAll(".custom-select-options").forEach(opt => {
+        opt.style.display = "none";
+    });
+    
+    if (!isCurrentlyOpen) {
+        options.style.display = "block";
+        let rect = wrapper.getBoundingClientRect();
+        
+        options.style.position = "fixed";
+        options.style.left = rect.left + "px";
+        options.style.width = Math.max(rect.width, 150) + "px";
+        options.style.zIndex = 9999;
+        
+        // Cek apakah muat di bawah, jika tidak muat taruh di atas
+        let spaceBelow = window.innerHeight - rect.bottom;
+        if (spaceBelow < options.offsetHeight && rect.top > options.offsetHeight) {
+            options.style.top = (rect.top - options.offsetHeight) + "px";
+        } else {
+            options.style.top = rect.bottom + "px";
+        }
+    }
+}
+
+document.addEventListener("click", (e) => {
+    if (!e.target.closest(".custom-select-wrapper")) {
+        document.querySelectorAll(".custom-select-options").forEach(opt => {
+            opt.style.display = "none";
+        });
+    }
+});
+
+window.addEventListener("scroll", (event) => {
+    if (event.target && event.target.classList && event.target.classList.contains("custom-select-options")) {
+        return;
+    }
+    document.querySelectorAll(".custom-select-options").forEach(opt => {
+        opt.style.display = "none";
+    });
+}, true);
+
+function selectCustomCategory(id, newCategory) {
+    if (newCategory === "__add_new__") {
+        let name = prompt("Enter new category name:");
+        if (name && name.trim()) {
+            name = name.trim();
+            if (!customCategories.includes(name)) {
+                customCategories.push(name);
+                localStorage.setItem("customCategories", JSON.stringify(customCategories));
+            }
+            newCategory = name;
+        } else {
+            return;
+        }
+    }
+    
+    let item = stopwatchHistory.find(item => item.id === id);
+    if (item) {
+        item.category = newCategory;
+        localStorage.setItem("stopwatchHistory", JSON.stringify(stopwatchHistory));
+    }
+    if (currentAppMode === "report") initReport();
+    renderFrontHistory();
+}
+
 // --- REPORT FUNCTIONS ---
 function filterReport(period) {
     currentReportFilter = period;
@@ -481,6 +570,17 @@ function filterReport(period) {
         btn.classList.remove("active");
     });
     event.target.classList.add("active");
+    
+    let monthSelectorCont = document.getElementById("monthSelectorContainer");
+    if (period === "month") {
+        monthSelectorCont.style.display = "block";
+        let monthSelector = document.getElementById("monthSelector");
+        let now = new Date();
+        monthSelector.value = now.getMonth();
+    } else {
+        monthSelectorCont.style.display = "none";
+    }
+    
     initReport();
 }
 
@@ -496,43 +596,59 @@ function toggleCategoryFilter(category) {
 function initReport() {
     let now = new Date();
     let startBoundary = new Date(now);
-    
+    let endBoundary = new Date(now);
+    let isCurrentTimeframe = true;
+
     if (currentReportFilter === "day") {
         startBoundary.setHours(0, 0, 0, 0);
     } else if (currentReportFilter === "week") {
         let day = now.getDay();
-        let diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday
+        let diff = now.getDate() - day + (day === 0 ? -6 : 1);
         startBoundary.setDate(diff);
         startBoundary.setHours(0, 0, 0, 0);
     } else if (currentReportFilter === "month") {
-        startBoundary.setDate(1);
+        let selectedMonth = parseInt(document.getElementById("monthSelector").value);
+        if (isNaN(selectedMonth)) selectedMonth = now.getMonth();
+        
+        startBoundary.setMonth(selectedMonth, 1);
         startBoundary.setHours(0, 0, 0, 0);
+        
+        endBoundary = new Date(startBoundary);
+        endBoundary.setMonth(selectedMonth + 1, 0);
+        endBoundary.setHours(23, 59, 59, 999);
+        
+        if (selectedMonth !== now.getMonth() || now.getFullYear() !== startBoundary.getFullYear()) {
+            isCurrentTimeframe = false;
+        }
     } else if (currentReportFilter === "year") {
         startBoundary.setMonth(0, 1);
         startBoundary.setHours(0, 0, 0, 0);
     }
-    
+
     let filteredHistory = stopwatchHistory.filter(item => {
         let ts = item.timestamp || now.getTime();
+        if (currentReportFilter === "month" && !isCurrentTimeframe) {
+            return ts >= startBoundary.getTime() && ts <= endBoundary.getTime();
+        }
         return ts >= startBoundary.getTime();
     });
-    
+
     let categorySums = {};
     filteredHistory.forEach(item => {
         let cat = item.category || "Uncategorized";
         let ms = item.ms || 0;
         categorySums[cat] = (categorySums[cat] || 0) + ms;
     });
-    
+
     let labels = Object.keys(categorySums);
 
-    // Update Totals UI
     reportTotalsContainer.innerHTML = "";
     if (labels.length > 0) {
         labels.forEach(cat => {
             let mins = Math.round((categorySums[cat] / 60000) * 10) / 10;
             let tag = document.createElement("div");
             tag.className = "total-tag" + (selectedCategoryFilter === cat ? " active" : "");
+            
             tag.innerHTML = `<strong>${cat}</strong>: ${mins} min`;
             tag.onclick = () => toggleCategoryFilter(cat);
             reportTotalsContainer.appendChild(tag);
@@ -542,30 +658,72 @@ function initReport() {
         reportTotalsContainer.style.display = "none";
     }
 
-    // Filter history for chart and list if category selected
     let displayHistory = filteredHistory;
     if (selectedCategoryFilter) {
         displayHistory = filteredHistory.filter(item => (item.category || "Uncategorized") === selectedCategoryFilter);
     }
 
-    // Chart logic
-    let chartCategorySums = {};
-    displayHistory.forEach(item => {
-        let cat = item.category || "Uncategorized";
-        let ms = item.ms || 0;
-        chartCategorySums[cat] = (chartCategorySums[cat] || 0) + ms;
-    });
-    
-    let chartLabels = Object.keys(chartCategorySums);
-    let dataPoints = chartLabels.map(cat => Math.round((chartCategorySums[cat] / 60000) * 100) / 100);
+    let chartLabels = [];
+    let dataPoints = [];
 
-    // Render History UI
+    if (selectedCategoryFilter) {
+        if (currentReportFilter === "week") {
+            chartLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            let sums = [0, 0, 0, 0, 0, 0, 0];
+            displayHistory.forEach(item => {
+                let d = new Date(item.timestamp || now.getTime());
+                let dayIdx = d.getDay() === 0 ? 6 : d.getDay() - 1;
+                sums[dayIdx] += (item.ms || 0);
+            });
+            dataPoints = sums.map(ms => Math.round((ms / 60000) * 100) / 100);
+            
+        } else if (currentReportFilter === "month") {
+            let selectedMonth = parseInt(document.getElementById("monthSelector").value);
+            if (isNaN(selectedMonth)) selectedMonth = now.getMonth();
+            let daysInMonth = new Date(now.getFullYear(), selectedMonth + 1, 0).getDate();
+            
+            let sums = new Array(daysInMonth).fill(0);
+            for(let i=1; i<=daysInMonth; i++) chartLabels.push(i.toString());
+            
+            displayHistory.forEach(item => {
+                let d = new Date(item.timestamp || now.getTime());
+                let dateIdx = d.getDate() - 1; 
+                sums[dateIdx] += (item.ms || 0);
+            });
+            dataPoints = sums.map(ms => Math.round((ms / 60000) * 100) / 100);
+            
+        } else if (currentReportFilter === "year") {
+            chartLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            let sums = new Array(12).fill(0);
+            displayHistory.forEach(item => {
+                let d = new Date(item.timestamp || now.getTime());
+                sums[d.getMonth()] += (item.ms || 0);
+            });
+            dataPoints = sums.map(ms => Math.round((ms / 60000) * 100) / 100);
+            
+        } else {
+            chartLabels = [selectedCategoryFilter];
+            let total = displayHistory.reduce((sum, item) => sum + (item.ms || 0), 0);
+            dataPoints = [Math.round((total / 60000) * 100) / 100];
+        }
+    } else {
+        let chartCategorySums = {};
+        displayHistory.forEach(item => {
+            let cat = item.category || "Uncategorized";
+            let ms = item.ms || 0;
+            chartCategorySums[cat] = (chartCategorySums[cat] || 0) + ms;
+        });
+
+        chartLabels = Object.keys(chartCategorySums);
+        dataPoints = chartLabels.map(cat => Math.round((chartCategorySums[cat] / 60000) * 100) / 100);
+    }
+
     renderReportHistory(displayHistory);
 
     let chartCanvas = document.getElementById("reportChart");
     let emptyMessage = document.getElementById("reportEmptyMessage");
-    
-    if (chartLabels.length === 0) {
+
+    if (chartLabels.length === 0 || dataPoints.every(dp => dp === 0)) {
         chartCanvas.style.display = "none";
         emptyMessage.style.display = "block";
         if (reportChartInstance) {
@@ -574,20 +732,20 @@ function initReport() {
         }
         return;
     }
-    
+
     chartCanvas.style.display = "block";
     emptyMessage.style.display = "none";
-    
+
     let ctx = chartCanvas.getContext("2d");
-    
+
     if (reportChartInstance) {
         reportChartInstance.destroy();
     }
-    
+
     reportChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels,
+            labels: chartLabels,
             datasets: [{
                 label: 'Minutes Spent',
                 data: dataPoints,
@@ -662,15 +820,15 @@ function initReport() {
 function renderReportHistory(filteredHistory) {
     reportHistoryList.innerHTML = "";
     let dayTotalTimeDisplay = document.getElementById("dayTotalTimeDisplay");
-    
+
     if (filteredHistory.length === 0) {
         reportHistoryContainer.style.display = "none";
         return;
     }
-    
+
     // Sort descending
     filteredHistory.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    
+
     // Pre-calculate daily totals
     let dailyTotals = {};
     let totalMsForAll = 0;
@@ -695,7 +853,7 @@ function renderReportHistory(filteredHistory) {
     filteredHistory.forEach((item) => {
         let dateObj = new Date(item.timestamp || Date.now());
         let dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        
+
         if (dateStr !== currentGroupDate) {
             // Add separator for previous group if not first
             if (currentGroupDate !== null) {
@@ -703,111 +861,125 @@ function renderReportHistory(filteredHistory) {
                 hr.className = "history-separator";
                 groupDiv.appendChild(hr);
             }
-            
+
             currentGroupDate = dateStr;
             groupDiv = document.createElement("div");
             groupDiv.className = "history-date-group";
-            
+
             if (currentReportFilter !== "day") {
                 let header = document.createElement("div");
                 header.className = "history-date-header";
-                
+
                 let dateSpan = document.createElement("span");
                 dateSpan.textContent = dateStr;
-                
+
                 let totalSpan = document.createElement("span");
                 totalSpan.className = "history-date-total";
                 totalSpan.textContent = formatMsToTime(dailyTotals[dateStr]);
-                
+
                 header.appendChild(dateSpan);
                 header.appendChild(totalSpan);
                 groupDiv.appendChild(header);
             }
-            
+
             groupUl = document.createElement("ul");
             groupUl.className = "history-list";
             groupDiv.appendChild(groupUl);
             reportHistoryList.appendChild(groupDiv);
         }
-        
+
         let ms = item.ms || 0;
         let id = item.id;
         let currentCat = item.category || "Uncategorized";
-        
+
         let li = document.createElement("li");
         li.className = "history-item";
-        
-        let optionsHtml = `<option value="Uncategorized" ${currentCat === 'Uncategorized' ? 'selected' : ''}>Uncategorized</option>`;
+
+        let optionsHtml = `<li onclick="selectCustomCategory('${id}', 'Uncategorized')">Uncategorized</li>`;
         customCategories.forEach(cat => {
             if (cat !== "Uncategorized") {
-                optionsHtml += `<option value="${cat}" ${currentCat === cat ? 'selected' : ''}>${cat}</option>`;
+                optionsHtml += `
+                    <li>
+                        <span onclick="selectCustomCategory('${id}', '${cat}')" style="flex:1; width:100%; display:inline-block;">${cat}</span>
+                        <span class="btn-delete-cat" onclick="deleteCustomCategoryEvent(event, '${cat}')">&times;</span>
+                    </li>`;
             }
         });
-        optionsHtml += `<option value="__add_new__">+ Add New...</option>`;
+        optionsHtml += `<li class="add-new-cat" onclick="selectCustomCategory('${id}', '__add_new__')">+ Add New...</li>`;
 
         li.innerHTML = `
             <span class="history-time" style="margin-left: 5px;">${formatMsToTime(ms)}</span>
-            <select class="category-select" onchange="updateHistoryCategory('${id}', this)">
-                ${optionsHtml}
-            </select>
+            <div class="custom-select-wrapper">
+                <div class="custom-select-display" onclick="toggleCustomSelect(event, this.parentElement)">${currentCat} <span style="font-size: 0.8em; margin-left: 5px;">▼</span></div>
+                <ul class="custom-select-options" style="display: none;" onclick="event.stopPropagation()">
+                    ${optionsHtml}
+                </ul>
+            </div>
             <button class="btn-delete-history" onclick="deleteHistory('${id}')">x</button>
         `;
         groupUl.appendChild(li);
     });
-    
+
     reportHistoryContainer.style.display = "block";
 }
 
 function renderFrontHistory() {
     if (!frontHistoryList) return;
     frontHistoryList.innerHTML = "";
-    
+
     let now = new Date();
     let startBoundary = new Date(now);
     startBoundary.setHours(0, 0, 0, 0);
-    
+
     let todayHistory = stopwatchHistory.filter(item => {
         let ts = item.timestamp || now.getTime();
         return ts >= startBoundary.getTime();
     });
-    
+
     if (todayHistory.length === 0 || currentAppMode === "report") {
         frontHistoryContainer.style.display = "none";
         return;
     }
-    
+
     // Sort descending
     todayHistory.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    
+
     let totalMsForAll = 0;
-    
+
     todayHistory.forEach(item => {
         let ms = item.ms || 0;
         let id = item.id;
         let currentCat = item.category || "Uncategorized";
         totalMsForAll += ms;
-        
+
         let li = document.createElement("li");
         li.className = "history-item";
-        
-        let optionsHtml = `<option value="Uncategorized" ${currentCat === 'Uncategorized' ? 'selected' : ''}>Uncategorized</option>`;
+
+        let optionsHtml = `<li onclick="selectCustomCategory('${id}', 'Uncategorized')">Uncategorized</li>`;
         customCategories.forEach(cat => {
             if (cat !== "Uncategorized") {
-                optionsHtml += `<option value="${cat}" ${currentCat === cat ? 'selected' : ''}>${cat}</option>`;
+                optionsHtml += `
+                    <li>
+                        <span onclick="selectCustomCategory('${id}', '${cat}')" style="flex:1; width:100%; display:inline-block;">${cat}</span>
+                        <span class="btn-delete-cat" onclick="deleteCustomCategoryEvent(event, '${cat}')">&times;</span>
+                    </li>`;
             }
         });
-        optionsHtml += `<option value="__add_new__">+ Add New...</option>`;
+        optionsHtml += `<li class="add-new-cat" onclick="selectCustomCategory('${id}', '__add_new__')">+ Add New...</li>`;
 
         li.innerHTML = `
             <span class="history-time" style="margin-left: 5px;">${formatMsToTime(ms)}</span>
-            <select class="category-select" onchange="updateHistoryCategory('${id}', this)">
-                ${optionsHtml}
-            </select>
+            <div class="custom-select-wrapper">
+                <div class="custom-select-display" onclick="toggleCustomSelect(event, this.parentElement)">${currentCat} <span style="font-size: 0.8em; margin-left: 5px;">▼</span></div>
+                <ul class="custom-select-options" style="display: none;" onclick="event.stopPropagation()">
+                    ${optionsHtml}
+                </ul>
+            </div>
             <button class="btn-delete-history" onclick="deleteHistory('${id}')">x</button>
         `;
         frontHistoryList.appendChild(li);
     });
-    
+
     frontTotalTimeDisplay.textContent = `Total: ${formatMsToTime(totalMsForAll)}`;
     frontTotalTimeDisplay.style.display = "inline-block";
     frontHistoryContainer.style.display = "block";
